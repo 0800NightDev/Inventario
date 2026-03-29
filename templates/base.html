@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Radiografía</title>
+    <!-- SF Pro Display font setup -->
+    <style>
+        @font-face {
+            font-family: 'SF Pro Display';
+            font-style: normal;
+            font-weight: 400;
+            src: local('SF Pro Display'), url('https://applesocial.s3.amazonaws.com/assets/typography/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'SF Pro Display';
+            font-style: normal;
+            font-weight: 500;
+            src: local('SF Pro Display Medium'), url('https://applesocial.s3.amazonaws.com/assets/typography/fonts/sanfrancisco/sanfranciscodisplay-medium-webfont.woff2') format('woff2');
+        }
+        @font-face {
+            font-family: 'SF Pro Display';
+            font-style: normal;
+            font-weight: 700;
+            src: local('SF Pro Display Bold'), url('https://applesocial.s3.amazonaws.com/assets/typography/fonts/sanfrancisco/sanfranciscodisplay-bold-webfont.woff2') format('woff2');
+        }
+
+        :root[data-theme="light"] {
+            --bg-gradient-1: #f8fafc;
+            --bg-gradient-2: #f1f5f9;
+            --bg-gradient-3: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --nav-bg: rgba(255, 255, 255, 0.95);
+            --border-color: rgba(148, 163, 184, 0.2);
+            --primary-btn: #334155;
+            --primary-btn-hover: #0f172a;
+            --success: #475569;
+            --error: #475569;
+            --input-bg: rgba(255, 255, 255, 0.95);
+            --input-border: rgba(100, 116, 139, 0.3);
+            
+            /* Compatibility Alias for sub-templates */
+            --primary: #0f172a;
+            --secondary: #475569;
+            --white: rgba(255, 255, 255, 0.95);
+            --bg: transparent;
+        }
+        
+        :root[data-theme="dark"] {
+            --bg-gradient-1: #020617;
+            --bg-gradient-2: #0f172a;
+            --bg-gradient-3: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.95);
+            --nav-bg: rgba(15, 23, 42, 0.95);
+            --border-color: rgba(248, 250, 252, 0.1);
+            --primary-btn: #cbd5e1;
+            --primary-btn-hover: #f8fafc;
+            --success: #cbd5e1;
+            --error: #cbd5e1;
+            --input-bg: rgba(15, 23, 42, 0.95);
+            --input-border: rgba(148, 163, 184, 0.3);
+            
+            --primary: #f8fafc;
+            --secondary: #cbd5e1;
+            --white: rgba(30, 41, 59, 0.95);
+            --bg: transparent;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-main);
+            transition: color 0.4s ease;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: var(--bg-gradient-1); /* Fallback */
+        }
+
+        /* Wavy Background Magic */
+        .wave-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(120deg, var(--bg-gradient-1), var(--bg-gradient-2), var(--bg-gradient-3));
+            background-size: 200% 200%;
+            animation: gradientPhase 12s ease infinite;
+        }
+        
+        @keyframes gradientPhase {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .wave-shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 43%;
+            animation: drift 25s infinite linear;
+        }
+
+        [data-theme="dark"] .wave-shape { background: rgba(0, 0, 0, 0.15); }
+
+        .wave1 { width: 700px; height: 700px; top: -200px; left: -100px; animation-duration: 20s; }
+        .wave2 { width: 900px; height: 900px; bottom: -300px; right: -200px; animation-duration: 35s; animation-direction: reverse; }
+        .wave3 { width: 500px; height: 500px; top: 40%; left: 40%; animation-duration: 15s; }
+
+        @keyframes drift {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Liquid Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--nav-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            transition: background 0.4s ease;
+        }
+        
+        .navbar-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: 0.5px;
+            color: var(--text-main);
+        }
+        
+        .navbar-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .navbar a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            opacity: 0.8;
+            transition: opacity 0.2s, color 0.2s;
+        }
+        
+        .navbar a:hover { opacity: 1; color: var(--primary-btn); }
+
+        .container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Glass Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, background 0.4s ease;
+        }
+        
+        .card:hover { border-color: rgba(255,255,255,0.6); }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Forms */
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1.25rem;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-main);
+            border-radius: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.4s;
+            font-family: inherit;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-btn);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            background: var(--card-bg);
+        }
+        
+        .btn {
+            background-color: var(--primary-btn);
+            color: var(--bg-gradient-1);
+            border: none;
+            padding: 0.85rem 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: var(--primary-btn-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Top-Right Toasts */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .toast {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, toastOut 0.5s 4.5s ease-in forwards;
+            min-width: 250px;
+        }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--error); }
+        
+        @keyframes toastIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
+        /* Dark/Light mode Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.15) rotate(15deg);
+        }
+        .theme-spin {
+            animation: spinTheme 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        @keyframes spinTheme {
+            0% { transform: scale(0.5) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        label { margin-bottom: 0.5rem; font-weight: 500; color: var(--text-main); }
+        h1, h2, h3, h4 { color: var(--text-main); font-weight: 700; margin-top: 0; }
+        p, span, td, th { color: var(--text-muted); }
+        strong { color: var(--text-main); }
+        
+        /* Basic structural resets for old temp */
+        table { color: var(--text-main); }
+
+        @media screen and (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                justify-content: center;
+                gap: 1rem;
+                padding: 1rem;
+                text-align: center;
+            }
+            .navbar-title {
+                position: static;
+                transform: none;
+                margin-bottom: 0.5rem;
+            }
+            .navbar-links {
+                margin: 0 auto;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            div[style*="visibility: hidden;"] {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wave-container">
+        <div class="wave-shape wave1"></div>
+        <div class="wave-shape wave2"></div>
+        <div class="wave-shape wave3"></div>
+    </div>
+
+    <nav class="navbar">
+        <div style="width: 15%; visibility: hidden;">placeholder</div>
+        
+        <div class="navbar-title">INVENTARIO RADIOGRAFÍA</div>
+        
+        <div class="navbar-links">
+            {% if current_user.is_authenticated %}
+                <span style="font-weight: 600; background: var(--input-bg); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem; color: var(--text-main);">
+                    @{{ current_user.username }}
+                </span>
+                {% if current_user.role in ['administrador', 'superusuario'] %}
+                    <a href="{{ url_for('dashboard_admin') }}">Panel Admin</a>
+                    <a href="{{ url_for('gestion_personal') }}">Personal</a>
+                {% endif %}
+                <a href="{{ url_for('dashboard_trabajador') }}">Comprobantes</a>
+                <a href="{{ url_for('logout') }}" title="Cerrar sesión">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Acciones</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="toast-container" id="toast-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast {{ 'success' if category == 'success' else 'error' }}">
+                        {% if category == 'error' %}
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        {% else %}
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        {% endif %}
+                        <span style="color: var(--text-main); font-weight: 500; font-size: 0.95rem;">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <button class="theme-toggle" id="theme-toggle" title="Cambiar Modo Oscuro/Claro">
+        <svg id="theme-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach(toast => setTimeout(() => toast.remove(), 5000));
+        });
+
+        const themeBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const root = document.documentElement;
+
+        const moonIconPath = '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+        const sunIconPath = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>';
+
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        root.setAttribute('data-theme', currentTheme);
+        themeIcon.innerHTML = currentTheme === 'light' ? moonIconPath : sunIconPath;
+
+        themeBtn.addEventListener('click', () => {
+            const newTheme = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            root.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            themeBtn.classList.remove('theme-spin');
+            void themeBtn.offsetWidth; // trigger reflow
+            themeBtn.classList.add('theme-spin');
+            
+            setTimeout(() => {
+                themeIcon.innerHTML = newTheme === 'light' ? moonIconPath : sunIconPath;
+            }, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 4rem auto;">
+    <div class="card">
+        <h2 style="margin-top: 0; margin-bottom: 2rem; text-align: center; color: var(--primary);">Iniciar Sesión</h2>
+        <form method="POST">
+            <label>Usuario</label>
+            <input type="text" name="username" class="form-control" autocomplete="off" required>
+            
+            <label>Contraseña</label>
+            <input type="password" name="password" class="form-control" required>
+            
+            <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Ingresar al Sistema</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <p style="color: #64748b; margin-bottom: 0.5rem;">¿Nuevo en la plataforma?</p>
+            <a href="{{ url_for('registro') }}" class="btn" style="background-color: var(--primary); color: var(--bg-gradient-1); text-decoration: none; display: inline-block; padding: 0.5rem 1rem; width: 100%; box-sizing: border-box;">Solicitar Acceso como Trabajador</a>
+            
+            <p style="margin-top: 1.5rem; color: #64748b; font-size: 0.85rem;">¿Olvidaste tu contraseña o usuario?<br> <strong style="color: var(--error);">Solicita un Reset de Clave al Administrador</strong> para recuperarlo de inmediato mediante su panel personal.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

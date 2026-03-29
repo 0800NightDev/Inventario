@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Gestión de Personal</h2>
+</div>
+<p style="color: #64748b; font-size: 1.05rem;">Aquí puedes autorizar/cancelar el registro de nuevos solicitantes validando si su Carnet y su status son íntegros, cambiar claves olvidadas de empleados y/o eliminarlos del sistema por completo.</p>
+
+<div style="display: grid; gap: 1.5rem; margin-top: 1.5rem;">
+    {% for user in usuarios %}
+    <div class="card" style="display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; position: relative;">
+        {% if user.foto_carnet %}
+            <div {% if user.status == 'activo' %}style="flex-shrink: 0; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 3px solid var(--success); box-shadow: 0 4px 6px rgba(0,0,0,0.1);"{% else %}style="flex-shrink: 0; width: 120px; height: 120px; border-radius: 8px; overflow: hidden; border: 3px solid var(--error); box-shadow: 0 4px 6px rgba(0,0,0,0.1);"{% endif %}>
+                <img src="{{ url_for('static', filename='uploads/' + user.foto_carnet) }}" alt="Foto carnet {{ user.username }}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        {% else %}
+            <div style="flex-shrink: 0; width: 120px; height: 120px; border-radius: 8px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 2.5rem; color: #94a3b8; border: 3px solid #cbd5e1;">
+                {{ user.username[0]|upper }}
+            </div>
+        {% endif %}
+        
+        <div style="flex: 1; min-width: 250px;">
+            <h3 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--primary);">
+                @{{ user.username }}
+            </h3>
+            <p style="margin: 0 0 1.5rem 0; color: #64748b; font-size: 1.05rem;">
+                Rol Operativo: <strong>{{ user.role|capitalize }}</strong> &nbsp;|&nbsp; 
+                WhatsApp: <strong>{{ user.whatsapp_number or 'Ninguno' }}</strong> &nbsp;|&nbsp; 
+                Estado: 
+                <strong {% if user.status == 'activo' %}style="color: var(--success);"{% else %}style="color: var(--error);"{% endif %}>
+                    {{ user.status|upper }}
+                </strong>
+            </p>
+            
+            {% if user.status == 'pendiente' %}
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <form method="POST" action="{{ url_for('accion_usuario', user_id=user.id) }}">
+                    <input type="hidden" name="accion" value="aprobar">
+                    <button type="submit" class="btn" style="background-color: var(--success); font-weight: bold; padding: 0.6rem 1.2rem;">Aprobar Cuenta Oficial</button>
+                </form>
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('accion_usuario', user_id=user.id) }}" onsubmit="return confirm('¿Seguro quieres eliminar este usuario del sistema definitivamente? Esta acción no se puede deshacer.');" style="position: absolute; top: 1rem; right: 1rem;">
+                <input type="hidden" name="accion" value="eliminar">
+                <button type="submit" style="background: none; border: none; cursor: pointer; color: var(--error); padding: 0.5rem; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Borrar Empleado">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+            </form>
+            
+            {% if user.status == 'activo' %}
+            <hr style="margin: 1.5rem 0 1rem 0; border: none; border-top: 1px solid var(--border);">
+            <form method="POST" action="{{ url_for('accion_usuario', user_id=user.id) }}" style="display: flex; gap: 0.5rem; align-items: stretch; max-width: 400px; margin-bottom: 0.8rem;">
+                <input type="hidden" name="accion" value="reset_password">
+                <input type="password" name="nueva_clave" class="form-control" style="margin-bottom: 0;" placeholder="Ingresar nueva contraseña..." required>
+                <button type="submit" class="btn" style="background-color: var(--primary); color: var(--bg-gradient-1); white-space: nowrap;">Resetear Clave</button>
+            </form>
+            <form method="POST" action="{{ url_for('accion_usuario', user_id=user.id) }}" style="display: flex; gap: 0.5rem; align-items: stretch; max-width: 400px;">
+                <input type="hidden" name="accion" value="update_whatsapp">
+                <input type="tel" name="nuevo_whatsapp" class="form-control" style="margin-bottom: 0;" placeholder="Editar WhatsApp..." value="{{ user.whatsapp_number or '' }}" required>
+                <button type="submit" class="btn" style="background-color: var(--success); color: var(--bg-gradient-1); white-space: nowrap;">Fijar Contacto</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid var(--secondary); padding: 1.5rem; border-radius: 8px; color: var(--secondary); text-align: center; font-size: 1.1rem;">
+        No hay empleados operativos en este momento ni listas de espera de trabajadores.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

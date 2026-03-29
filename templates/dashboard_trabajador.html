@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    @keyframes slideDownFade {
+        from {
+            opacity: 0;
+            transform: translateY(-15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .anim-expand {
+        animation: slideDownFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .cb-label-styled {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0.5rem 1.2rem;
+        border-radius: 30px;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        transition: all 0.2s;
+    }
+
+    .cb-label-styled:hover {
+        background: var(--card-bg);
+        border-color: var(--primary-btn);
+    }
+
+    .cb-label-styled input[type="checkbox"] {
+        width: 1.2rem;
+        height: 1.2rem;
+        cursor: pointer;
+        accent-color: var(--primary-btn);
+    }
+
+    .size-block {
+        display: none;
+        margin-bottom: 2.5rem;
+        border-left: 4px solid var(--secondary);
+        padding: 1.5rem;
+        background: var(--card-bg);
+        border-radius: 0 12px 12px 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        border-top: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+</style>
+
+{% if pedidos_pendientes %}
+<div class="card" style="border: 2px solid var(--primary-btn); background: rgba(59, 130, 246, 0.05); margin-bottom: 3rem;">
+    <h2 style="color: var(--primary); margin-bottom: 0;">Pedidos a Entregar (Prioridad)</h2>
+    <p style="color: var(--text-muted); margin-top: 0.3rem;">Tienes despachos asignados por la administración pendientes de confirmación fotográfica.</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.5rem;">
+        {% for pedido in pedidos_pendientes %}
+        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items:flex-start; margin-bottom: 1rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 1rem;">
+                <div>
+                    <span style="font-size: 1.2rem; font-weight: 800; color: var(--primary);">{{ pedido.tamano_placa }}</span>
+                    <span style="font-size: 0.8rem; background: var(--text-main); color: var(--bg-gradient-1); padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 700; margin-left: 0.3rem;">{{ pedido.formato }}</span>
+                    <div style="margin-top: 0.5rem; font-weight: 600; color: #64748b;">Asignado el {{ pedido.fecha.strftime('%d/%m/%Y %I:%M %p') }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 1.5rem; font-weight: 900; color: var(--text-main);">{{ pedido.cantidad_cajas }} Cajas Totales</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">(Aprox. {{ pedido.cantidad_cajas // 5 }} bultos y {{ pedido.cantidad_cajas % 5 }} sueltas)</div>
+                </div>
+            </div>
+            
+            <form method="POST" action="{{ url_for('confirmar_pedido', tx_id=pedido.id) }}" enctype="multipart/form-data" style="display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px;">
+                    <label style="font-weight: 600; color: var(--primary); font-size: 0.95rem;">Foto Comprobante de Entrega Físico <span style="color: var(--error);">*</span></label>
+                    <input type="file" name="foto" id="foto_{{ pedido.id }}" class="form-control" accept="image/*" required style="margin-bottom: 0;">
+                </div>
+                <button type="submit" class="btn" style="background-color: var(--secondary); color: var(--bg-gradient-1);">Confirmar Despacho</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>Registro Libre de Mercancía</h2>
+<p>Complete los datos para generar un nuevo ingreso o egreso. Puede seleccionar dinámicamente múltiples tamaños y
+    formatos para este pedido a la vez.</p>
+
+<div class="card" style="max-width: 800px; margin: 2rem auto;">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('registro_operacion') }}">
+        <label>Tipo de Operación General</label>
+        <select name="tipo" class="form-control" required style="margin-bottom: 2rem;">
+            <option value="ingreso">Ingreso de Mercancía</option>
+            <option value="egreso">Egreso / Despacho</option>
+        </select>
+
+        {% if current_user.role in ['administrador', 'superusuario'] %}
+        <div style="margin-bottom: 2rem; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: 8px; background: rgba(59, 130, 246, 0.05);">
+            <label style="font-weight: bold; color: var(--primary);">Fecha Manual (Solo Administradores)</label>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; margin-bottom: 1rem;">Si se deja en blanco, se usará la fecha actual automática. Utilice esto para registrar inventario previo a la creación del sistema.</p>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                <input type="date" name="fecha_manual_dia" class="form-control" style="margin-bottom: 0; flex: 2; min-width: 150px;">
+                
+                <div style="display: flex; gap: 0.5rem; flex: 3; align-items: center; min-width: 200px;">
+                    <select name="fecha_manual_hh" class="form-control" style="margin-bottom: 0; flex: 1; padding: 0.5rem; min-width: 65px;">
+                        <option value="">Hora</option>
+                        {% for h in range(1, 13) %}
+                        <option value="{{ '%02d' % h }}">{{ '%02d' % h }}</option>
+                        {% endfor %}
+                    </select>
+                    <span style="font-weight: bold; color: var(--text-main);">:</span>
+                    <select name="fecha_manual_mm" class="form-control" style="margin-bottom: 0; flex: 1; padding: 0.5rem; min-width: 65px;">
+                        <option value="">Min</option>
+                        {% for m in range(0, 60, 5) %}
+                        <option value="{{ '%02d' % m }}">{{ '%02d' % m }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="fecha_manual_ampm" class="form-control" style="margin-bottom: 0; flex: 1.2; padding: 0.5rem; min-width: 70px;">
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <label style="font-weight: bold; color: var(--primary);">1. Elige los Tamaños de Placa que llegaron/saldrán
+            (Múltiple Selección)</label>
+        <div
+            style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; background: var(--card-bg); padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px;">
+            <label class="cb-label-styled">
+                <input type="checkbox" name="tamanos" value="14x14" onchange="toggleSize('14x14')"> 14x14
+            </label>
+            <label class="cb-label-styled">
+                <input type="checkbox" name="tamanos" value="14x17" onchange="toggleSize('14x17')"> 14x17
+            </label>
+            <label class="cb-label-styled">
+                <input type="checkbox" name="tamanos" value="10x14" onchange="toggleSize('10x14')"> 10x14 (26x36)
+            </label>
+            <label class="cb-label-styled">
+                <input type="checkbox" name="tamanos" value="10x12" onchange="toggleSize('10x12')"> 10x12
+            </label>
+        </div>
+
+        {% set tamanos = [('14x14', '14x14'), ('14x17', '14x17'), ('10x14', '10x14 (26x36)'), ('10x12', '10x12')] %}
+        {% for val, label in tamanos %}
+        <div id="block_{{ val }}" class="size-block">
+            <h3 style="margin-top: 0; color: var(--primary); font-size: 1.3rem;">Desglose para placa {{ label }}</h3>
+
+            <label style="font-weight: 600; margin-bottom: 1rem; display: block;">Formatos que vinieron en {{ label
+                }}:</label>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <label class="cb-label-styled" style="padding: 0.4rem 1rem; font-size: 0.95rem;">
+                    <input type="checkbox" name="formatos_{{ val }}" value="DI-HL"
+                        onchange="toggleInputs('{{ val }}', 'DI-HL')"> Formato DI-HL
+                </label>
+                <label class="cb-label-styled" style="padding: 0.4rem 1rem; font-size: 0.95rem;">
+                    <input type="checkbox" name="formatos_{{ val }}" value="HR-U"
+                        onchange="toggleInputs('{{ val }}', 'HR-U')"> Formato HR-U
+                </label>
+            </div>
+
+            <div id="inputs_{{ val }}_DI-HL"
+                style="display: none; background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px dashed var(--text-muted);">
+                <strong
+                    style="color: var(--text-main); font-weight: 800; text-transform: uppercase; font-size: 1.1rem; display: block; margin-bottom: 1rem;">{{
+                    label }} (DI-HL):</strong>
+                <div style="display: flex; gap: 1.5rem;">
+                    <div style="flex: 1;"><label>Bultos Entregados</label><input type="number"
+                            name="bultos_{{ val }}_DI-HL" min="0" value="0" class="form-control"
+                            style="margin-bottom: 0;"></div>
+                    <div style="flex: 1;"><label>Cajas Sueltas</label><input type="number" name="cajas_{{ val }}_DI-HL"
+                            min="0" max="4" value="0" class="form-control" style="margin-bottom: 0;"></div>
+                </div>
+            </div>
+
+            <div id="inputs_{{ val }}_HR-U"
+                style="display: none; background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--text-muted);">
+                <strong
+                    style="color: var(--text-main); font-weight: 800; text-transform: uppercase; font-size: 1.1rem; display: block; margin-bottom: 1rem;">{{
+                    label }} (HR-U):</strong>
+                <div style="display: flex; gap: 1.5rem;">
+                    <div style="flex: 1;"><label>Bultos Entregados</label><input type="number"
+                            name="bultos_{{ val }}_HR-U" min="0" value="0" class="form-control"
+                            style="margin-bottom: 0;"></div>
+                    <div style="flex: 1;"><label>Cajas Sueltas</label><input type="number" name="cajas_{{ val }}_HR-U"
+                            min="0" max="4" value="0" class="form-control" style="margin-bottom: 0;"></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <label style="font-weight: bold; color: var(--primary); font-size: 1.1rem;">2. Foto de Comprobante / Cargamento
+            Oficial</label>
+        <input type="file" name="foto" class="form-control" accept="image/*" required style="margin-top: 0.5rem;">
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: -0.5rem; margin-bottom: 1.5rem;">
+            Nota: Al presionar registrar, el sistema multiplicará bultos x 5 y separará automáticamente todo esto en
+            registros distintos enlazados a la misma foto.
+        </p>
+
+        <button type="submit" class="btn"
+            style="width: 100%; padding: 1.2rem; font-size: 1.1rem; margin-top: 1rem;">Registrar Operación
+            Múltiple</button>
+    </form>
+</div>
+
+<script>
+    function toggleSize(size) {
+        const div = document.getElementById('block_' + size);
+        const checkbox = document.querySelector(`input[name="tamanos"][value="${size}"]`);
+
+        // Handle parent wrapper style
+        const labelWrapper = checkbox.closest('.cb-label-styled');
+
+        if (checkbox.checked) {
+            div.style.display = 'block';
+            div.classList.remove('anim-expand');
+            void div.offsetWidth; // trigger reflow to restart animation
+            div.classList.add('anim-expand');
+
+            if (labelWrapper) {
+                labelWrapper.style.borderColor = 'var(--text-main)';
+                labelWrapper.style.fontWeight = '700';
+            }
+        } else {
+            div.style.display = 'none';
+            div.classList.remove('anim-expand');
+
+            if (labelWrapper) {
+                labelWrapper.style.borderColor = '';
+                labelWrapper.style.fontWeight = '500';
+            }
+
+            // Desmarcar todos los formatos hijos y forzar ocultamiento
+            const childCheckboxes = document.querySelectorAll(`input[name="formatos_${size}"]`);
+            childCheckboxes.forEach(cb => {
+                cb.checked = false;
+                toggleInputs(size, cb.value); // limpia las variables anidadas
+            });
+        }
+    }
+
+    function toggleInputs(size, format) {
+        const div = document.getElementById(`inputs_${size}_${format}`);
+        const checkbox = document.querySelector(`input[name="formatos_${size}"][value="${format}"]`);
+
+        const labelWrapper = checkbox.closest('.cb-label-styled');
+
+        if (checkbox.checked) {
+            div.style.display = 'block';
+            div.classList.remove('anim-expand');
+            void div.offsetWidth;
+            div.classList.add('anim-expand');
+
+            if (labelWrapper) {
+                labelWrapper.style.borderColor = 'var(--text-main)';
+                labelWrapper.style.fontWeight = '700';
+            }
+        } else {
+            div.style.display = 'none';
+            div.classList.remove('anim-expand');
+
+            if (labelWrapper) {
+                labelWrapper.style.borderColor = '';
+                labelWrapper.style.fontWeight = '500';
+            }
+
+            // Resetea valores a 0 por seguridad
+            document.querySelector(`input[name="bultos_${size}_${format}"]`).value = 0;
+            document.querySelector(`input[name="cajas_${size}_${format}"]`).value = 0;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="max-width: 450px; margin: 3rem auto;">
+    <div class="card" style="padding: 2.5rem;">
+        <h2 style="margin-top: 0; text-align: center; color: var(--primary);">Registrarse como Trabajador</h2>
+        <p style="text-align: center; color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem;">Acceso restringido. Su cuenta deberá ser validada temporalmente mediante la aprobación de un Administrador logístico.</p>
+        
+        <form method="POST" enctype="multipart/form-data">
+            <label>Nombre de Usuario</label>
+            <input type="text" name="username" class="form-control" autocomplete="off" required>
+            
+            <label>Contraseña</label>
+            <input type="password" name="password" class="form-control" required>
+            
+            <label>Número de WhatsApp (Notificaciones de Entrega)</label>
+            <input type="tel" name="whatsapp_number" class="form-control" placeholder="+Ejemplo: 58412345678" required>
+            
+            <label>Foto Tipo Carnet Identificativo (Obligatorio)</label>
+            <input type="file" name="foto_carnet" class="form-control" accept="image/jpeg, image/png" required>
+            
+            <button type="submit" class="btn" style="width: 100%; margin-top: 1rem; padding: 0.85rem; font-size: 1.05rem;">Solicitar Acceso</button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+            <a href="{{ url_for('login') }}" style="color: var(--secondary); text-decoration: none; font-weight: 500;">&#8592; Volver al Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

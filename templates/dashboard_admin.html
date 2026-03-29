@@ -1,0 +1,465 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <h2>Panel de Administración</h2>
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        {% if current_user.role == 'superusuario' %}
+        <form method="POST" action="{{ url_for('eliminar_todo') }}" style="display:inline;" onsubmit="return confirm('ATENCIÓN: ¿Seguro que deseas ELIMINAR todo el inventario y el historial transaccional de la clínica?');">
+            <button type="submit" class="btn" style="background: transparent; border: 1px solid #ef4444; border-radius: 20px; color: #ef4444; font-weight: 600; cursor: pointer;">
+                Eliminar Datos
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('generar_datos_prueba') }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de generar datos de prueba automatizados?');">
+            <button type="submit" class="btn" style="background: transparent; border: 1px solid var(--text-main); border-radius: 20px; color: var(--text-main); font-weight: 600; cursor: pointer;">
+                Generar Datos Prueba
+            </button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('exportar_excel') }}" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            Exportar Reporte a Excel (Mensual)
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <h3 style="margin: 0;">Análisis de Ingresos y Egresos</h3>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <select id="chartTimeFilter" class="pill-filter" style="background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 20px; padding: 0.5rem 1rem; outline: none; font-weight: 500;">
+                <option value="week" selected>Semanas</option>
+                <option value="month">Meses</option>
+                <option value="year">Años</option>
+            </select>
+            <select id="chartFormatFilter" class="pill-filter" style="background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 20px; padding: 0.5rem 1rem; outline: none; font-weight: 500;">
+                <option value="">Completando formatos...</option>
+            </select>
+        </div>
+    </div>
+    <div style="width: 100%; max-height: 350px; margin: 1.5rem 0;">
+        <canvas id="inventoryChart"></canvas>
+    </div>
+    <!-- Fila Superior: DI-HL -->
+    <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Formato DI-HL</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
+        {% set dihl_items = inventario | selectattr('formato', 'equalto', 'DI-HL') | list %}
+        {% for item in dihl_items %}
+        <div class="inv-card" style="background: var(--bg); border: 1px solid var(--border-color); border-top: 4px solid var(--primary-btn); padding: 1.5rem; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">{{ item.tamano_placa }}</span>
+                <span style="font-size: 0.75rem; font-weight: 700; background: var(--text-main); color: var(--bg-gradient-1); padding: 0.2rem 0.6rem; border-radius: 20px; letter-spacing: 0.5px;">{{ item.formato }}</span>
+            </div>
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
+                <div style="font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1;">{{ item.cantidad_cajas }}</div>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-top: 0.3rem;">Cajas Totales en Stock</div>
+                
+                <div style="margin-top: 0.8rem; display: flex; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main);">
+                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
+                        <strong>{{ item.cantidad_cajas // 5 }}</strong> Bultos
+                    </div>
+                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
+                        <strong>{{ item.cantidad_cajas % 5 }}</strong> Cajas Sueltas
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted); border: 1px dashed var(--border); border-radius: 12px; background: rgba(148, 163, 184, 0.05);">
+            No hay inventario registrado para DI-HL.
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Fila Inferior: HR-U -->
+    <h4 style="margin-top: 2.5rem; margin-bottom: 0.5rem; color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Formato HR-U</h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
+        {% set hru_items = inventario | selectattr('formato', 'equalto', 'HR-U') | list %}
+        {% for item in hru_items %}
+        <div class="inv-card" style="background: var(--bg); border: 1px solid var(--border-color); border-top: 4px solid var(--primary-btn); padding: 1.5rem; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">{{ item.tamano_placa }}</span>
+                <span style="font-size: 0.75rem; font-weight: 700; background: var(--text-main); color: var(--bg-gradient-1); padding: 0.2rem 0.6rem; border-radius: 20px; letter-spacing: 0.5px;">{{ item.formato }}</span>
+            </div>
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
+                <div style="font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1;">{{ item.cantidad_cajas }}</div>
+                <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-top: 0.3rem;">Cajas Totales en Stock</div>
+                
+                <div style="margin-top: 0.8rem; display: flex; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main);">
+                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
+                        <strong>{{ item.cantidad_cajas // 5 }}</strong> Bultos
+                    </div>
+                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
+                        <strong>{{ item.cantidad_cajas % 5 }}</strong> Cajas Sueltas
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted); border: 1px dashed var(--border); border-radius: 12px; background: rgba(148, 163, 184, 0.05);">
+            No hay inventario registrado para HR-U.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h3>Transacciones Pendientes (Ingresos y Egresos)</h3>
+    {% if pendientes_lotes %}
+        <div style="display: grid; gap: 1rem; margin-top: 1rem;">
+        {% for lote_id, lote in pendientes_lotes.items() %}
+            <div style="border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; background: var(--bg);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <strong style="color: var(--primary); font-size: 1.1rem;">
+                            {{ lote.tipo|upper }} registrado por {{ lote.user.username }}
+                        </strong>
+                        <div style="color: #64748b; margin-top: 0.2rem;">{{ lote['fecha'].strftime('%d/%m/%Y %I:%M %p') }}</div>
+                    </div>
+                    {% if lote.imagen_path %}
+                    <div>
+                        <a href="{{ url_for('static', filename='uploads/' + lote.imagen_path) }}" target="_blank" style="color: var(--text-main); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--text-main); padding-bottom: 2px;">
+                            Ver Foto / Comprobante
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <strong style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Detalle de Items:</strong>
+                    <ul style="list-style-type: none; padding: 0; margin: 0; display: grid; gap: 0.5rem;">
+                        {% for tx in lote['items'] %}
+                        <li style="background: rgba(255, 255, 255, 0.05); padding: 0.5rem 1rem; border-radius: 6px; border: 1px dashed var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                            <span>Producto: <span style="font-weight: 700;">{{ tx.tamano_placa }} ({{ tx.formato }})</span></span>
+                            <span>Cantidad: <span style="font-weight: 800; color: var(--text-main);">{{ tx.cantidad_cajas }} cajas</span> 
+                                <span style="opacity: 0.7; font-size: 0.9em;">(aprox: {{ tx.cantidad_cajas // 5 }} bultos y {{ tx.cantidad_cajas % 5 }} cajas)</span>
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <form method="POST" action="{{ url_for('validar_lote', lote_id=lote_id) }}">
+                        <input type="hidden" name="accion" value="aprobar">
+                        <button type="submit" class="btn" style="background-color: var(--text-main); color: var(--bg-gradient-1); font-weight: 800;">Confirmar e Ingresar Lote</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('validar_lote', lote_id=lote_id) }}">
+                        <input type="hidden" name="accion" value="rechazar">
+                        <button type="submit" class="btn" style="background-color: transparent; border: 1px solid var(--text-muted); color: var(--text-main); font-weight: 600;">Rechazar Lote Completo</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {% else %}
+        <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); padding: 1rem; border-radius: 6px; color: var(--success); margin-top: 1rem; font-weight: 500;">
+            No hay transacciones pendientes de validación en este lote en este momento. ¡Todo está al día!
+        </div>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h3>Asignar Pedido / Orden de Salida</h3>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem; margin-top: 0;">Delega una tarea estructurada de extracción a un trabajador de la planta.</p>
+    <form method="POST" action="{{ url_for('asignar_pedido') }}">
+        <div class="form-control" style="background: transparent; border: none; padding: 0; box-shadow: none;">
+            <label style="font-weight: 700; color: var(--primary);">1. Seleccionar Trabajador a Cargo</label>
+            <select name="trabajador_id" class="form-control" required style="margin-bottom: 2rem; cursor: pointer;">
+                <option value="">Seleccione un trabajador de la lista...</option>
+                {% for t in trabajadores %}
+                <option value="{{ t.id }}">@{{ t.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <label style="font-weight: 700; color: var(--primary);">2. Formatos a Despachar (Seleccione tamaños múltiples)</label>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; background: var(--card-bg); padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px;">
+            <label class="cb-label-styled"><input type="checkbox" name="tamanos_pedido" value="14x14" onchange="toggleSizePedido('14x14')"> 14x14</label>
+            <label class="cb-label-styled"><input type="checkbox" name="tamanos_pedido" value="14x17" onchange="toggleSizePedido('14x17')"> 14x17</label>
+            <label class="cb-label-styled"><input type="checkbox" name="tamanos_pedido" value="10x14" onchange="toggleSizePedido('10x14')"> 10x14</label>
+            <label class="cb-label-styled"><input type="checkbox" name="tamanos_pedido" value="10x12" onchange="toggleSizePedido('10x12')"> 10x12</label>
+        </div>
+        
+        <script>
+            function toggleSizePedido(size) {
+                const block = document.getElementById('block_pedido_' + size);
+                block.style.display = block.style.display === 'none' ? 'block' : 'none';
+            }
+            function toggleInputsPedido(size, format) {
+                const inputs = document.getElementById('inputs_pedido_' + size + '_' + format);
+                inputs.style.display = inputs.style.display === 'none' ? 'block' : 'none';
+            }
+        </script>
+
+        {% set tamanos_admin = [('14x14', '14x14'), ('14x17', '14x17'), ('10x14', '10x14'), ('10x12', '10x12')] %}
+        {% for val, label in tamanos_admin %}
+        <div id="block_pedido_{{ val }}" style="display: none; margin-bottom: 1.5rem; padding: 1.5rem; background: var(--card-bg); border-radius: 0 12px 12px 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); border: 1px solid var(--border-color); border-left: 4px solid var(--secondary);">
+            <h3 style="margin-top: 0; color: var(--primary); font-size: 1.1rem;">Cantidades para placa {{ label }}</h3>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <label class="cb-label-styled" style="padding: 0.4rem 1rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                    <input type="checkbox" name="formatos_pedido_{{ val }}" value="DI-HL" onchange="toggleInputsPedido('{{ val }}', 'DI-HL')"> Formato DI-HL
+                </label>
+                <label class="cb-label-styled" style="padding: 0.4rem 1rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                    <input type="checkbox" name="formatos_pedido_{{ val }}" value="HR-U" onchange="toggleInputsPedido('{{ val }}', 'HR-U')"> Formato HR-U
+                </label>
+            </div>
+            
+            {% for form in ['DI-HL', 'HR-U'] %}
+            <div id="inputs_pedido_{{ val }}_{{ form }}" style="display: none; background: rgba(148, 163, 184, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px dashed var(--border-color);">
+                <strong style="color: var(--primary); font-size: 1.1rem; display: block; margin-bottom: 1rem;">Requerimiento {{ form }}</strong>
+                <div style="display: flex; gap: 1rem;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.9rem;">Bultos (Cajas x 5)</label>
+                        <input type="number" name="bultos_pedido_{{ val }}_{{ form }}" min="0" placeholder="0" class="form-control" style="margin-bottom: 0;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.9rem;">Cajas Sueltas</label>
+                        <input type="number" name="cajas_pedido_{{ val }}_{{ form }}" min="0" placeholder="0" class="form-control" style="margin-bottom: 0;">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; margin-top: 1rem; font-weight: 800; background-color: var(--primary);">Delegar Tarea de Extracción</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3>Historial de Movimientos Recientes</h3>
+    
+    <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; background: rgba(148, 163, 184, 0.05); padding: 1rem; border-radius: 6px; border: 1px solid var(--border);">
+        <input type="date" id="filterTableFecha" style="background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem; outline: none; flex: 1; min-width: 140px;" title="Filtrar por Fecha">
+        
+        <select id="filterTableFormato" style="background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem; outline: none; flex: 1; min-width: 140px;">
+            <option value="">Cualquier Formato</option>
+            {% set formatos = historial|map(attribute='formato')|unique|list %}
+            {% for f in formatos %}
+                <option value="{{ f }}">{{ f }}</option>
+            {% endfor %}
+        </select>
+        
+        <select id="filterTableTamano" style="background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem; outline: none; flex: 1; min-width: 140px;">
+            <option value="">Cualquier Tamaño</option>
+            {% set tamanos = historial|map(attribute='tamano_placa')|unique|list %}
+            {% for t in tamanos %}
+                <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+        </select>
+        
+        <button onclick="applyTableFilters()" style="background: var(--text-main); color: var(--bg-gradient-1); border: none; padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Filtrar</button>
+        <button onclick="resetTableFilters()" style="background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Limpiar</button>
+    </div>
+
+    <div style="overflow-x: auto; margin-top: 1.5rem;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 600px;">
+            <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+                <th style="padding: 0.5rem;">Fecha</th>
+                <th style="padding: 0.5rem;">Operación</th>
+                <th style="padding: 0.5rem;">Tamaño</th>
+                <th style="padding: 0.5rem;">Formato</th>
+                <th style="padding: 0.5rem;">Cajas</th>
+                <th style="padding: 0.5rem;">Autorizado por</th>
+                <th style="padding: 0.5rem; text-align: right;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tx in historial %}
+            <tr class="historial-row" data-fecha="{{ tx.fecha.strftime('%Y-%m-%d') }}" data-formato="{{ tx.formato }}" data-tamano="{{ tx.tamano_placa }}" style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 0.5rem; color: #64748b;">{{ tx.fecha.strftime('%d/%m/%Y %I:%M %p') }}</td>
+                <td style="padding: 0.5rem;">
+                    <span style="font-weight: 800; font-size: 0.85rem; letter-spacing: 0.5px; border-radius: 4px; padding: 0.2rem 0.5rem; background: {% if tx.tipo == 'ingreso' %}rgba(34, 197, 94, 0.1){% else %}rgba(249, 115, 22, 0.1){% endif %}; color: {% if tx.tipo == 'ingreso' %}var(--success, #22c55e){% else %}var(--warning, #f97316){% endif %}; border: 1px solid {% if tx.tipo == 'ingreso' %}var(--success, #22c55e){% else %}var(--warning, #f97316){% endif %};">
+                        {{ tx.tipo|upper }}
+                    </span>
+                </td>
+                <td style="padding: 0.5rem;">{{ tx.tamano_placa }}</td>
+                <td style="padding: 0.5rem;">{{ tx.formato }}</td>
+                <td style="padding: 0.5rem;">{{ tx.cantidad_cajas }} cajas</td>
+                <td style="padding: 0.5rem;">{{ tx.admin.username if tx.admin else 'Sistema' }}</td>
+                <td style="padding: 0.5rem; text-align: right;">
+                    <form method="POST" action="{{ url_for('eliminar_transaccion', tx_id=tx.id) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este registro? Esto revertirá el impacto en el inventario actual.');">
+                        <button type="submit" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 0.2rem 0.5rem; border-radius: 4px; pointer-events: auto; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="padding: 1rem; text-align: center; color: #64748b;">No hay movimientos registrados.</td></tr>
+            {% endfor %}
+        </tbody>
+        </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="historial-data" type="application/json">
+[
+    {% for tx in historial %}
+    {
+        "id": {{ tx.id }},
+        "tipo": "{{ tx.tipo }}",
+        "cantidad": {{ tx.cantidad_cajas }},
+        "tamano_placa": "{{ tx.tamano_placa }}",
+        "formato": "{{ tx.formato }}",
+        "fecha": "{{ tx.fecha.strftime('%Y-%m-%d %H:%M:%S') }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const historialData = JSON.parse(document.getElementById('historial-data').textContent);
+    
+    // Configurar Filtro de Formatos
+    const select = document.getElementById('chartFormatFilter');
+    const formatos = [...new Set(historialData.map(tx => tx.formato))];
+    
+    select.innerHTML = '<option value="">Todos los Formatos</option>';
+    formatos.forEach(f => {
+        let opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        select.appendChild(opt);
+    });
+    
+    // Bind filters
+    select.addEventListener('change', updateChart);
+    document.getElementById('chartTimeFilter').addEventListener('change', updateChart);
+
+    const ctx = document.getElementById('inventoryChart').getContext('2d');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDark ? '#f8fafc' : '#1e293b';
+    const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+    let chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: textColor } }
+            },
+            scales: {
+                y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true },
+                x: { ticks: { color: textColor }, grid: { display: false } }
+            }
+        }
+    });
+
+    function updateChart() {
+        const selectedFormat = select.value;
+        const timeFilter = document.getElementById('chartTimeFilter').value;
+        const filtered = selectedFormat ? historialData.filter(tx => tx.formato === selectedFormat) : historialData;
+        
+        function getGroupKey(dateStr) {
+            const date = new Date(dateStr.replace(' ', 'T')); // Standardize to ISO safely
+            if (timeFilter === 'year') {
+                return date.getFullYear().toString();
+            } else if (timeFilter === 'month') {
+                return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+            } else { // week
+                const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+                const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+                return d.getUTCFullYear() + '-Sem ' + String(weekNo).padStart(2, '0');
+            }
+        }
+        
+        filtered.forEach(tx => { tx.groupKey = getGroupKey(tx.fecha); });
+        const groupKeys = [...new Set(filtered.map(tx => tx.groupKey))].sort();
+
+        let ingresosData = groupKeys.map(gk => {
+            return filtered.filter(tx => tx.groupKey === gk && tx.tipo === 'ingreso')
+                           .reduce((sum, tx) => sum + tx.cantidad, 0);
+        });
+
+        let egresosData = groupKeys.map(gk => {
+            return filtered.filter(tx => tx.groupKey === gk && tx.tipo === 'egreso')
+                           .reduce((sum, tx) => sum + tx.cantidad, 0);
+        });
+
+        chartInstance.data.labels = groupKeys.length ? groupKeys : ['Sin Datos'];
+        chartInstance.data.datasets = [
+            {
+                label: 'Ingresos (Cajas)',
+                data: ingresosData.length ? ingresosData : [0],
+                backgroundColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)',
+                borderColor: '#22c55e',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: 'Egresos (Cajas)',
+                data: egresosData.length ? egresosData : [0],
+                backgroundColor: isDark ? 'rgba(249, 115, 22, 0.3)' : 'rgba(249, 115, 22, 0.2)',
+                borderColor: '#f97316',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }
+        ];
+        chartInstance.update();
+    }
+    
+    select.addEventListener('change', updateChart);
+    updateChart();
+
+    window.applyTableFilters = function() {
+        const fFecha = document.getElementById('filterTableFecha').value;
+        const fFormato = document.getElementById('filterTableFormato').value;
+        const fTamano = document.getElementById('filterTableTamano').value;
+        
+        document.querySelectorAll('.historial-row').forEach(row => {
+            let matchFecha = fFecha === "" || row.dataset.fecha === fFecha;
+            let matchFormato = fFormato === "" || row.dataset.formato === fFormato;
+            let matchTamano = fTamano === "" || row.dataset.tamano === fTamano;
+            
+            if (matchFecha && matchFormato && matchTamano) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    };
+
+    window.resetTableFilters = function() {
+        document.getElementById('filterTableFecha').value = '';
+        document.getElementById('filterTableFormato').value = '';
+        document.getElementById('filterTableTamano').value = '';
+        applyTableFilters();
+    };
+
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.attributeName === 'data-theme') {
+                window.location.reload();
+            }
+        });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+});
+</script>
+<style>
+/* Estilos adicionales para listas desplegables (pills) y modo oscuro */
+select.pill-filter option {
+    background-color: var(--bg);
+    color: var(--text-main);
+}
+select.pill-filter {
+    color-scheme: dark light;
+}
+.inv-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    border-color: var(--primary);
+}
+</style>
+{% endblock %}
