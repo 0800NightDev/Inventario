@@ -76,20 +76,22 @@ def migrate():
                 from sqlalchemy import create_engine, text
                 pg_engine = create_engine(supabase_url)
                 
-                # Para evitar problemas de comillas con palabras reservadas como "user",
-                # usamos SQLAlchemy para obtener los nombres reales de las tablas.
-                with pg_engine.connect() as con:
-                    for table in reversed(db.metadata.sorted_tables):
-                        # Solo actualizar si la tabla tiene una columna 'id'
-                        if 'id' in table.columns:
-                            table_name = table.name
-                            # Crear el SQL dinámicamente citando el nombre de la tabla de forma segura
-                            sql = f"SELECT setval(pg_get_serial_sequence('\"{table_name}\"', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM \"{table_name}\";"
-                            try:
-                                con.execute(text(sql))
-                            except Exception as seq_e:
-                                print(f"  Advertencia ajustando secuencia para {table_name}: {seq_e}")
-                    con.commit()
+                # Ejecutar cada comando en un bloque independiente para que un error
+                # no aborte la transacción (InFailedSqlTransaction) para los demás.
+                tables = ['user', 'inventory', 'transaction']
+                for table_name in tables:
+                    try:
+                        with pg_engine.connect() as con:
+                            # Postgres en Supabase suele crear las secuencias automáticamente en minúsculas
+                            # independientemente de si la tabla usa comillas dobles.
+                            seq_name = f"{table_name}_id_seq"
+                            # Usar un bloque de ejecución simple para cada tabla
+                            sql = f"SELECT setval('{seq_name}', (SELECT COALESCE(MAX(id), 1) FROM \"{table_name}\"));"
+                            con.execute(text(sql))
+                            con.commit()
+                            print(f"  Secuencia para '{table_name}' ajustada.")
+                    except Exception as seq_e:
+                        print(f"  Advertencia con la secuencia de '{table_name}', puede que no exista: {str(seq_e).splitlines()[0]}")
                 print("Secuencias actualizadas correctamente.")
             
         except Exception as e:
