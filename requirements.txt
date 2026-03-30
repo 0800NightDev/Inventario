@@ -8,4 +8,4 @@ pywebview
 pyinstaller
 gunicorn==21.2.0
 psycopg2-binary==2.9.9
-\nplyer==2.1.0
+plyer==2.1.0
