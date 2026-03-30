@@ -26,6 +26,9 @@ def migrate():
     print("\n--- PASO 2: Conectando a Supabase ---")
     app.config['SQLALCHEMY_DATABASE_URI'] = supabase_url
     
+    # IMPORTANTE: Forzar a SQLAlchemy a olvidar la conexión de SQLite anterior
+    db.engine.dispose()
+    
     with app.app_context():
         # Crear tablas si no existen
         db.create_all()
@@ -41,7 +44,7 @@ def migrate():
             )
             db.session.merge(new_u)
         
-        # Migrar Inventario
+        # Migrar Inventario (Omitiendo Primary Key automáticas si es necesario, pero merge(id=...) es mejor)
         print("Migrando inventario...")
         for i in inventories:
             new_i = Inventory(
@@ -66,13 +69,22 @@ def migrate():
             print("\n¡MIGRACIÓN EXITOSA!")
             print("Todos los datos han sido copiados a Supabase.")
             
-            # Ajustar secuencias de IDs para Postgres (importante para que los nuevos registros no fallen)
-            print("Ajustando secuencias de IDs...")
-            db.session.execute(db.text("SELECT setval('user_id_seq', (SELECT max(id) FROM \"user\"));"))
-            db.session.execute(db.text("SELECT setval('inventory_id_seq', (SELECT max(id) FROM inventory));"))
-            db.session.execute(db.text("SELECT setval('transaction_id_seq', (SELECT max(id) FROM \"transaction\"));"))
-            db.session.commit()
-            print("Secuencias actualizadas correctamente.")
+            # Ajustar secuencias de IDs para Postgres (SOLO en Postgres)
+            if "postgresql" in supabase_url:
+                print("Ajustando secuencias de IDs en PostgreSQL...")
+                # Usamos una nueva conexión para asegurar que no hay confusión de motor
+                from sqlalchemy import create_engine, text
+                pg_engine = create_engine(supabase_url)
+                with pg_engine.connect() as con:
+                    con.execute(text("SELECT setval('user_id_seq', (SELECT max(id) FROM \"user\"));"))
+                    con.execute(text("SELECT setval('inventory_id_seq', (SELECT max(id) FROM inventory));"))
+                    con.execute(text("SELECT setval('transaction_id_seq', (SELECT max(id) FROM \"transaction\"));"))
+                    con.commit()
+                print("Secuencias actualizadas correctamente.")
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"\nERROR DURANTE LA MIGRACIÓN: {e}")
             
         except Exception as e:
             db.session.rollback()
