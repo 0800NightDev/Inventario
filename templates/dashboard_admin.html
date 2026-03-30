@@ -44,24 +44,26 @@
     <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Formato DI-HL</h4>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
         {% set dihl_items = inventario | selectattr('formato', 'equalto', 'DI-HL') | list %}
-        {% for item in dihl_items %}
+        {% for tamano, items_lote in dihl_items | groupby('tamano_placa') %}
+        {% set total_cajas = items_lote | sum(attribute='cantidad_cajas') %}
         <div class="inv-card" style="background: var(--bg); border: 1px solid var(--border-color); border-top: 4px solid var(--primary-btn); padding: 1.5rem; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; display: flex; flex-direction: column; gap: 0.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <span style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">{{ item.tamano_placa }}</span>
-                <span style="font-size: 0.75rem; font-weight: 700; background: var(--text-main); color: var(--bg-gradient-1); padding: 0.2rem 0.6rem; border-radius: 20px; letter-spacing: 0.5px;">{{ item.formato }}</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">{{ tamano }}</span>
+                <span style="font-size: 0.75rem; font-weight: 700; background: var(--text-main); color: var(--bg-gradient-1); padding: 0.2rem 0.6rem; border-radius: 20px; letter-spacing: 0.5px;">DI-HL</span>
             </div>
             
             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
-                <div style="font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1;">{{ item.cantidad_cajas }}</div>
+                <div style="font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1;">{{ total_cajas }}</div>
                 <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-top: 0.3rem;">Cajas Totales en Stock</div>
                 
-                <div style="margin-top: 0.8rem; display: flex; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main);">
-                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
-                        <strong>{{ item.cantidad_cajas // 5 }}</strong> Bultos
+                <div style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-main);">
+                    <strong style="display:block; margin-bottom:0.3rem; color: var(--text-muted);">Desglose Lotes (Vencimiento):</strong>
+                    {% for lote in items_lote if lote.cantidad_cajas > 0 %}
+                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px; margin-bottom: 0.2rem; display: flex; justify-content: space-between; font-weight: 600;">
+                        <span>{{ lote.fecha_vencimiento or 'N/A' }}</span>
+                        <strong style="color: var(--primary);">{{ lote.cantidad_cajas }} cj</strong>
                     </div>
-                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
-                        <strong>{{ item.cantidad_cajas % 5 }}</strong> Cajas Sueltas
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -76,24 +78,26 @@
     <h4 style="margin-top: 2.5rem; margin-bottom: 0.5rem; color: var(--text-muted); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px;">Formato HR-U</h4>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
         {% set hru_items = inventario | selectattr('formato', 'equalto', 'HR-U') | list %}
-        {% for item in hru_items %}
+        {% for tamano, items_lote in hru_items | groupby('tamano_placa') %}
+        {% set total_cajas = items_lote | sum(attribute='cantidad_cajas') %}
         <div class="inv-card" style="background: var(--bg); border: 1px solid var(--border-color); border-top: 4px solid var(--primary-btn); padding: 1.5rem; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; cursor: pointer; display: flex; flex-direction: column; gap: 0.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <span style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">{{ item.tamano_placa }}</span>
-                <span style="font-size: 0.75rem; font-weight: 700; background: var(--text-main); color: var(--bg-gradient-1); padding: 0.2rem 0.6rem; border-radius: 20px; letter-spacing: 0.5px;">{{ item.formato }}</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">{{ tamano }}</span>
+                <span style="font-size: 0.75rem; font-weight: 700; background: var(--text-main); color: var(--bg-gradient-1); padding: 0.2rem 0.6rem; border-radius: 20px; letter-spacing: 0.5px;">HR-U</span>
             </div>
             
             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
-                <div style="font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1;">{{ item.cantidad_cajas }}</div>
+                <div style="font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1;">{{ total_cajas }}</div>
                 <div style="font-size: 0.85rem; font-weight: 600; color: #64748b; margin-top: 0.3rem;">Cajas Totales en Stock</div>
                 
-                <div style="margin-top: 0.8rem; display: flex; gap: 0.5rem; font-size: 0.85rem; color: var(--text-main);">
-                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
-                        <strong>{{ item.cantidad_cajas // 5 }}</strong> Bultos
+                <div style="margin-top: 0.8rem; font-size: 0.85rem; color: var(--text-main);">
+                    <strong style="display:block; margin-bottom:0.3rem; color: var(--text-muted);">Desglose Lotes (Vencimiento):</strong>
+                    {% for lote in items_lote if lote.cantidad_cajas > 0 %}
+                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px; margin-bottom: 0.2rem; display: flex; justify-content: space-between; font-weight: 600;">
+                        <span>{{ lote.fecha_vencimiento or 'N/A' }}</span>
+                        <strong style="color: var(--primary);">{{ lote.cantidad_cajas }} cj</strong>
                     </div>
-                    <div style="background: rgba(148, 163, 184, 0.1); padding: 0.3rem 0.6rem; border-radius: 6px;">
-                        <strong>{{ item.cantidad_cajas % 5 }}</strong> Cajas Sueltas
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -210,6 +214,20 @@
             {% for form in ['DI-HL', 'HR-U'] %}
             <div id="inputs_pedido_{{ val }}_{{ form }}" style="display: none; background: rgba(148, 163, 184, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px dashed var(--border-color);">
                 <strong style="color: var(--primary); font-size: 1.1rem; display: block; margin-bottom: 1rem;">Requerimiento {{ form }}</strong>
+                
+                <label style="font-size: 0.9rem; font-weight: 600;">Seleccione de qué lote (Fecha Venc.) descontar</label>
+                <select name="vencimiento_pedido_{{ val }}_{{ form }}" class="form-control" style="margin-bottom: 1rem; cursor: pointer;">
+                    {% set stock_lotes = inventario | selectattr('tamano_placa', 'equalto', label) | selectattr('formato', 'equalto', form) | list %}
+                    {% set has_stock = false %}
+                    {% for s in stock_lotes if s.cantidad_cajas > 0 %}
+                        <option value="{{ s.fecha_vencimiento or '' }}">Lote Venc: {{ s.fecha_vencimiento or 'N/A' }} (Disp: {{ s.cantidad_cajas }} cajas)</option>
+                        {% set has_stock = true %}
+                    {% endfor %}
+                    {% if not has_stock %}
+                        <option value="">Sin Stock Disponible</option>
+                    {% endif %}
+                </select>
+
                 <div style="display: flex; gap: 1rem;">
                     <div style="flex: 1;">
                         <label style="font-size: 0.9rem;">Bultos (Cajas x 5)</label>
@@ -251,6 +269,8 @@
             {% endfor %}
         </select>
         
+        <input type="date" id="filterTableVenc" style="background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem; outline: none; flex: 1; min-width: 140px;" title="Filtrar por Vencimiento">
+        
         <button onclick="applyTableFilters()" style="background: var(--text-main); color: var(--bg-gradient-1); border: none; padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Filtrar</button>
         <button onclick="resetTableFilters()" style="background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 600;">Limpiar</button>
     </div>
@@ -263,6 +283,7 @@
                 <th style="padding: 0.5rem;">Operación</th>
                 <th style="padding: 0.5rem;">Tamaño</th>
                 <th style="padding: 0.5rem;">Formato</th>
+                <th style="padding: 0.5rem;">Fecha Venc.</th>
                 <th style="padding: 0.5rem;">Cajas</th>
                 <th style="padding: 0.5rem;">Autorizado por</th>
                 <th style="padding: 0.5rem; text-align: right;">Acciones</th>
@@ -270,7 +291,7 @@
         </thead>
         <tbody>
             {% for tx in historial %}
-            <tr class="historial-row" data-fecha="{{ tx.fecha.strftime('%Y-%m-%d') }}" data-formato="{{ tx.formato }}" data-tamano="{{ tx.tamano_placa }}" style="border-bottom: 1px solid var(--border);">
+            <tr class="historial-row" data-fecha="{{ tx.fecha.strftime('%Y-%m-%d') }}" data-formato="{{ tx.formato }}" data-tamano="{{ tx.tamano_placa }}" data-vencimiento="{{ tx.fecha_vencimiento or '' }}" style="border-bottom: 1px solid var(--border);">
                 <td style="padding: 0.5rem; color: #64748b;">{{ tx.fecha.strftime('%d/%m/%Y %I:%M %p') }}</td>
                 <td style="padding: 0.5rem;">
                     <span style="font-weight: 800; font-size: 0.85rem; letter-spacing: 0.5px; border-radius: 4px; padding: 0.2rem 0.5rem; background: {% if tx.tipo == 'ingreso' %}rgba(34, 197, 94, 0.1){% else %}rgba(249, 115, 22, 0.1){% endif %}; color: {% if tx.tipo == 'ingreso' %}var(--success, #22c55e){% else %}var(--warning, #f97316){% endif %}; border: 1px solid {% if tx.tipo == 'ingreso' %}var(--success, #22c55e){% else %}var(--warning, #f97316){% endif %};">
@@ -279,6 +300,7 @@
                 </td>
                 <td style="padding: 0.5rem;">{{ tx.tamano_placa }}</td>
                 <td style="padding: 0.5rem;">{{ tx.formato }}</td>
+                <td style="padding: 0.5rem; font-weight: 600;">{{ tx.fecha_vencimiento or 'N/A' }}</td>
                 <td style="padding: 0.5rem;">{{ tx.cantidad_cajas }} cajas</td>
                 <td style="padding: 0.5rem;">{{ tx.admin.username if tx.admin else 'Sistema' }}</td>
                 <td style="padding: 0.5rem; text-align: right;">
@@ -416,13 +438,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const fFecha = document.getElementById('filterTableFecha').value;
         const fFormato = document.getElementById('filterTableFormato').value;
         const fTamano = document.getElementById('filterTableTamano').value;
+        const fVenc = document.getElementById('filterTableVenc').value;
         
         document.querySelectorAll('.historial-row').forEach(row => {
             let matchFecha = fFecha === "" || row.dataset.fecha === fFecha;
             let matchFormato = fFormato === "" || row.dataset.formato === fFormato;
             let matchTamano = fTamano === "" || row.dataset.tamano === fTamano;
+            let matchVenc = fVenc === "" || row.dataset.vencimiento === fVenc;
             
-            if (matchFecha && matchFormato && matchTamano) {
+            if (matchFecha && matchFormato && matchTamano && matchVenc) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
@@ -434,6 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('filterTableFecha').value = '';
         document.getElementById('filterTableFormato').value = '';
         document.getElementById('filterTableTamano').value = '';
+        document.getElementById('filterTableVenc').value = '';
         applyTableFilters();
     };
 

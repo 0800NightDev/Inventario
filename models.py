@@ -17,6 +17,7 @@ class Inventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tamano_placa = db.Column(db.String(50), nullable=False)
     formato = db.Column(db.String(20), nullable=False) # 'DI-HL' o 'HR-U'
+    fecha_vencimiento = db.Column(db.String(10), nullable=True)
     cantidad_cajas = db.Column(db.Integer, default=0)
 
     @property
@@ -38,6 +39,7 @@ class Transaction(db.Model):
     
     tamano_placa = db.Column(db.String(50), nullable=False)
     formato = db.Column(db.String(20), nullable=False)
+    fecha_vencimiento = db.Column(db.String(10), nullable=True)
     cantidad_cajas = db.Column(db.Integer, nullable=False)
     
     fecha = db.Column(db.DateTime, default=datetime.datetime.utcnow)

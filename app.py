@@ -19,8 +19,15 @@ if getattr(sys, 'frozen', False):
 else:
     application_path = os.path.dirname(os.path.abspath(__file__))
 
-db_path = os.path.join(application_path, 'inventario.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+db_url = os.environ.get('DATABASE_URL')
+if db_url:
+    # Render returns postgres:// which is deprecated in SQLAlchemy 1.4+, need to replace it with postgresql://
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    db_path = os.path.join(application_path, 'inventario.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 
 app.config['UPLOAD_FOLDER'] = os.path.join(application_path, 'static', 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -319,17 +326,22 @@ def registro_operacion():
         flash('Error: Debes seleccionar al menos un tamaño de placa en tu lote.', 'error')
         return redirect(url_for('dashboard_trabajador'))
         
+    fecha_vencimiento = request.form.get('fecha_vencimiento') or None
     foto = request.files.get('foto')
-    if not foto or not foto.filename or not allowed_file(foto.filename):
+    
+    filename = None
+    if foto and foto.filename and allowed_file(foto.filename):
+        from werkzeug.utils import secure_filename
+        import time
+        filename = secure_filename(foto.filename)
+        filename = f"tx_{int(time.time())}_{filename}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        foto.save(filepath)
+    elif current_user.role not in ['administrador', 'superusuario']:
         flash('Foto del lote comprobante obligatoria y válida de formato faltante.', 'error')
         return redirect(url_for('dashboard_trabajador'))
         
-    from werkzeug.utils import secure_filename
-    import time
-    filename = secure_filename(foto.filename)
-    filename = f"tx_{int(time.time())}_{filename}"
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    foto.save(filepath)
+    
     
     map_labels = {
         '14x14': '14x14',
@@ -360,9 +372,9 @@ def registro_operacion():
                     admin_aprobador = current_user.id
                     
                     # Afectar inventario directamente
-                    inv = Inventory.query.filter_by(tamano_placa=t_label, formato=formato).first()
+                    inv = Inventory.query.filter_by(tamano_placa=t_label, formato=formato, fecha_vencimiento=fecha_vencimiento).first()
                     if not inv:
-                        inv = Inventory(tamano_placa=t_label, formato=formato, cantidad_cajas=total_cajas)
+                        inv = Inventory(tamano_placa=t_label, formato=formato, cantidad_cajas=total_cajas, fecha_vencimiento=fecha_vencimiento)
                         db.session.add(inv)
                     else:
                         inv.cantidad_cajas += total_cajas
@@ -373,6 +385,7 @@ def registro_operacion():
                     user_id=current_user.id,
                     tamano_placa=t_label,
                     formato=formato,
+                    fecha_vencimiento=fecha_vencimiento,
                     cantidad_cajas=total_cajas,
                     imagen_path=filename,
                     estado=estado_operacion,
@@ -420,6 +433,7 @@ def asignar_pedido():
     for tamano in tamanos_seleccionados:
         formatos = request.form.getlist(f'formatos_pedido_{tamano}')
         for formato in formatos:
+            vencimiento = request.form.get(f'vencimiento_pedido_{tamano}_{formato}') or None
             b_str = request.form.get(f'bultos_pedido_{tamano}_{formato}', '').strip()
             c_str = request.form.get(f'cajas_pedido_{tamano}_{formato}', '').strip()
             
@@ -436,6 +450,7 @@ def asignar_pedido():
                     admin_id=current_user.id,
                     tamano_placa=t_label,
                     formato=formato,
+                    fecha_vencimiento=vencimiento,
                     cantidad_cajas=total_cajas,
                     estado='asignado',
                     imagen_path=None
@@ -491,16 +506,16 @@ def validar_transaccion(tx_id):
         db.session.commit()
         flash('Transacción rechazada.', 'success')
     elif accion == 'aprobar':
-        inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato).first()
+        inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato, fecha_vencimiento=tx.fecha_vencimiento).first()
         if not inv:
-            inv = Inventory(tamano_placa=tx.tamano_placa, formato=tx.formato, cantidad_cajas=0)
+            inv = Inventory(tamano_placa=tx.tamano_placa, formato=tx.formato, fecha_vencimiento=tx.fecha_vencimiento, cantidad_cajas=0)
             db.session.add(inv)
             
         if tx.tipo == 'ingreso':
             inv.cantidad_cajas += tx.cantidad_cajas
         elif tx.tipo == 'egreso':
             if inv.cantidad_cajas < tx.cantidad_cajas:
-                flash(f'Error: Solo hay {inv.cantidad_cajas} cajas en inventario y se intentan egresar {tx.cantidad_cajas}.', 'error')
+                flash(f'Error: Solo hay {inv.cantidad_cajas} cajas en el lote {tx.fecha_vencimiento} y se intentan egresar {tx.cantidad_cajas}.', 'error')
                 return redirect(url_for('dashboard_admin'))
             inv.cantidad_cajas -= tx.cantidad_cajas
             
@@ -539,18 +554,18 @@ def validar_lote(lote_id):
         # Validar si hay suficiente stock para egresos antes de comprometer cualquier cosa
         for tx in transacciones:
             if tx.tipo == 'egreso':
-                inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato).first()
+                inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato, fecha_vencimiento=tx.fecha_vencimiento).first()
                 if not inv or inv.cantidad_cajas < tx.cantidad_cajas:
                     stock_real = inv.cantidad_cajas if inv else 0
-                    flash(f'Error: Stock insuficiente. Hay {stock_real} cajas de {tx.tamano_placa} {tx.formato} y se intentan egresar {tx.cantidad_cajas}. Se abortó toda la orden.', 'error')
+                    flash(f'Error: Stock insuficiente. Hay {stock_real} cajas de {tx.tamano_placa} {tx.formato} (Venc: {tx.fecha_vencimiento}) y se intentan egresar {tx.cantidad_cajas}. Se abortó toda la orden.', 'error')
                     db.session.rollback()
                     return redirect(url_for('dashboard_admin'))
                     
         # Aplicar los cambios
         for tx in transacciones:
-            inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato).first()
+            inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato, fecha_vencimiento=tx.fecha_vencimiento).first()
             if not inv:
-                inv = Inventory(tamano_placa=tx.tamano_placa, formato=tx.formato, cantidad_cajas=0)
+                inv = Inventory(tamano_placa=tx.tamano_placa, formato=tx.formato, fecha_vencimiento=tx.fecha_vencimiento, cantidad_cajas=0)
                 db.session.add(inv)
             
             if tx.tipo == 'ingreso':
@@ -576,7 +591,7 @@ def eliminar_transaccion(tx_id):
     
     # Revertir el inventario afectado si la transacción ya estaba aprobada
     if tx.estado == 'aprobada':
-        inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato).first()
+        inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato, fecha_vencimiento=tx.fecha_vencimiento).first()
         if inv:
             if tx.tipo == 'ingreso':
                 # Si quitamos un ingreso, restamos del inventario
@@ -614,10 +629,10 @@ def confirmar_pedido(tx_id):
         return redirect(url_for('dashboard_trabajador'))
         
     # Verificar que el stock sí sea suficiente
-    inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato).first()
+    inv = Inventory.query.filter_by(tamano_placa=tx.tamano_placa, formato=tx.formato, fecha_vencimiento=tx.fecha_vencimiento).first()
     if not inv or inv.cantidad_cajas < tx.cantidad_cajas:
         stock_real = inv.cantidad_cajas if inv else 0
-        flash(f'Error Fatal: Stock insuficiente actual ({stock_real} cajas). Imposible despachar el pedido.', 'error')
+        flash(f'Error Fatal: Stock insuficiente actual ({stock_real} cajas en Lote Vencimiento {tx.fecha_vencimiento}). Imposible despachar el pedido.', 'error')
         return redirect(url_for('dashboard_trabajador'))
         
     from werkzeug.utils import secure_filename
@@ -720,5 +735,5 @@ def init_db():
             print("Base de datos inicializada y usuarios por defecto creados.")
 
 if __name__ == '__main__':
-    # init_db() se ejecutará de forma manual la primera vez
-    app.run(debug=True, port=8000)
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=True)

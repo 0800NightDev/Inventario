@@ -103,6 +103,13 @@
             <option value="egreso">Egreso / Despacho</option>
         </select>
 
+        <div style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg);">
+            <label style="font-weight: bold; color: var(--primary);">Fecha de Vencimiento de Lote (Opcional)</label>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; margin-bottom: 1rem;">Si este lote tiene fecha de expiración, indícala aquí.</p>
+            <input type="date" name="fecha_vencimiento" class="form-control" style="margin-bottom: 0;">
+        </div>
+
+
         {% if current_user.role in ['administrador', 'superusuario'] %}
         <div style="margin-bottom: 2rem; padding: 1.5rem; border: 1px dashed var(--border-color); border-radius: 8px; background: rgba(59, 130, 246, 0.05);">
             <label style="font-weight: bold; color: var(--primary);">Fecha Manual (Solo Administradores)</label>
@@ -201,9 +208,8 @@
 
         <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;">
 
-        <label style="font-weight: bold; color: var(--primary); font-size: 1.1rem;">2. Foto de Comprobante / Cargamento
-            Oficial</label>
-        <input type="file" name="foto" class="form-control" accept="image/*" required style="margin-top: 0.5rem;">
+        <label style="font-weight: bold; color: var(--primary); font-size: 1.1rem;">2. Foto de Comprobante / Cargamento Oficial</label>
+        <input type="file" name="foto" class="form-control" accept="image/*" {% if current_user.role not in ['administrador', 'superusuario'] %}required{% endif %} style="margin-top: 0.5rem;">
         <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: -0.5rem; margin-bottom: 1.5rem;">
             Nota: Al presionar registrar, el sistema multiplicará bultos x 5 y separará automáticamente todo esto en
             registros distintos enlazados a la misma foto.

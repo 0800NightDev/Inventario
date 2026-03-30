@@ -59,16 +59,23 @@ Ve a tu PC con Windows y sigue estos pasos:
   *(Reemplaza la URL por la tuya)*
 
 ### 3. Crear el Entorno e Instalar Dependencias:
-- Estando en la carpeta del proyecto en Windows, ejecuta:
+- Estando en la carpeta del proyecto en Windows, abre tu terminal y ejecuta:
   ```cmd
   python -m venv venv
-  venv\Scripts\activate
+  ```
+- Para **activarlo**, depende de la terminal que estés usando en Windows:
+  * **Si usas PowerShell** (por defecto en VS Code o terminal de Windows), puedes recibir un error de permisos. Corre primero este comando: `Set-ExecutionPolicy Unrestricted -Scope CurrentUser`, dile que Sí (Y), y luego activa con: `venv\Scripts\Activate.ps1`
+  * **Si usas Símbolo de Sistema (CMD)**, activa con: `venv\Scripts\activate`
+- Luego de activar (debería salir `(venv)` al inicio de la línea), instala todo:
+  ```cmd
   pip install -r requirements.txt
   ```
 
-### 4. Restaurar la Base de Datos (Opcional):
-- Si quieres tener el mismo inventario y usuarios que en Linux, pega la carpeta `instance` (con el archivo `.sqlite` o `.db` dentro) que copiaste previamente, directamente dentro de la carpeta raíz de tu proyecto en Windows.
-- Si no la copias, simplemente la aplicación iniciará en blanco desde cero al momento de sembrar información inicial.
+### 4. Restaurar la Base de Datos Histórica:
+- Si quieres tener el mismo inventario y usuarios que tenías cargados, debes buscar el archivo `.db` o `.sqlite` de tu base de datos y colocarlo en la carpeta correcta.
+- **🚨 MUY IMPORTANTE:** El archivo de tu base de datos original (desde donde extrajiste la data, por ejemplo `instance/inventario.db` o `inventario.db`) debe colocarse en tu nueva PC **directamente en la carpeta principal raíz del proyecto** (no dentro de ninguna carpeta `instance`, sino al lado de `app.py`). 
+- Si pegaste la carpeta `instance/` completa por error, simplemente entra a esa carpeta, copia el archivo `inventario.db` y pégalo afuera, justo al lado del archivo `app.py`.
+- Si no colocas la base de datos allí, la aplicación iniciará en blanco desde cero.
 
 ---
 
