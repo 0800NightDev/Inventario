@@ -27,7 +27,8 @@ def migrate():
     app.config['SQLALCHEMY_DATABASE_URI'] = supabase_url
     
     # IMPORTANTE: Forzar a SQLAlchemy a olvidar la conexión de SQLite anterior
-    db.engine.dispose()
+    with app.app_context():
+        db.engine.dispose()
     
     with app.app_context():
         # Crear tablas si no existen
