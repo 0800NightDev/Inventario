@@ -6,7 +6,6 @@ from models import db, User, Inventory, Transaction
 import openpyxl
 from openpyxl.drawing.image import Image as OpenpyxlImage
 from openpyxl.styles import Font, PatternFill
-from plyer import notification
 
 import sys
 
@@ -465,12 +464,16 @@ def asignar_pedido():
         # Trigger Notificaciones Nativas y WhatsApp Web API
         try:
             worker = User.query.get(trabajador_id)
-            notification.notify(
-                title='Pedido Despachado 🚀',
-                message=f'Se asignaron {operaciones_guardadas} bloques a {worker.username} exitosamente.',
-                app_name='Inventario',
-                timeout=5
-            )
+            try:
+                from plyer import notification
+                notification.notify(
+                    title='Pedido Despachado 🚀',
+                    message=f'Se asignaron {operaciones_guardadas} bloques a {worker.username} exitosamente.',
+                    app_name='Inventario',
+                    timeout=5
+                )
+            except Exception as e:
+                print(f"No se pudo mostrar la notificación (entorno en la nube/headless): {e}")
             
             if worker and worker.whatsapp_number:
                 import urllib.parse
@@ -478,7 +481,12 @@ def asignar_pedido():
                 msg = f"🔔 *Alerta de Despacho Móvil*\nHola {worker.username}, tienes un nuevo pedido de extracción asignado en tu Panel esperando por comprobante fotográfico."
                 msg_encoded = urllib.parse.quote(msg)
                 wa_url = f"https://wa.me/{worker.whatsapp_number}?text={msg_encoded}"
-                webbrowser.open(wa_url)
+                try:
+                    webbrowser.open(wa_url)
+                except Exception as wb_e:
+                    print(f"No se pudo abrir el navegador de WhatsApp (entorno en la nube): {wb_e}")
+        except Exception as e:
+            print(f"Error general en notificaciones: {e}")
         except Exception as e:
             print(f"Error en notificaciones: {e}")
             
