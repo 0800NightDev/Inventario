@@ -735,5 +735,7 @@ def init_db():
             print("Base de datos inicializada y usuarios por defecto creados.")
 
 if __name__ == '__main__':
+    # Inicializar la base de datos (crear tablas y usuarios por defecto)
+    init_db()
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port, debug=True)
