@@ -725,14 +725,21 @@ def init_db():
         if not User.query.filter_by(role='superusuario').first():
             from werkzeug.security import generate_password_hash
             # Credenciales por defecto (desarrollo): admin / admin123
-            su = User(username='admin', password_hash=generate_password_hash('admin123'), role='superusuario')
+            su = User(username='admin', password_hash=generate_password_hash('admin123'), role='superusuario', status='activo')
             # También agregamos trabajador y admin de prueba
-            trab = User(username='trabajador', password_hash=generate_password_hash('trabajador123'), role='trabajador')
-            adm = User(username='administrador', password_hash=generate_password_hash('admin123'), role='administrador')
+            trab = User(username='trabajador', password_hash=generate_password_hash('trabajador123'), role='trabajador', status='activo')
+            adm = User(username='administrador', password_hash=generate_password_hash('admin123'), role='administrador', status='activo')
             
             db.session.add_all([su, trab, adm])
             db.session.commit()
             print("Base de datos inicializada y usuarios por defecto creados.")
+        
+        # Opcional: Asegurar que todos los administradores/superusuarios existentes estén activos por si acaso
+        admins = User.query.filter(User.role.in_(['administrador', 'superusuario'])).all()
+        for a in admins:
+            if a.status != 'activo':
+                a.status = 'activo'
+        db.session.commit()
 
 if __name__ == '__main__':
     # Inicializar la base de datos (crear tablas y usuarios por defecto)
