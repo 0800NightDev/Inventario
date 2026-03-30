@@ -19,11 +19,33 @@ git push origin main
 6. Elige **"Public"** o **"Private"** (puedes cambiarlo luego).
 7. Dale a **"Create Space"**.
 
-## Paso 3: Conectar con GitHub
-1. Una vez creado el Space, ve a la pestaña **"Settings"**.
-2. Baja hasta **"Github Network"** o simplemente ve a la pestaña principal y sigue las instrucciones para subir el código.
-3. **Recomendación:** La forma más fácil es ir a **"Settings"** -> **"Variables and secrets"** e ignorar el repo por ahora, o simplemente subir tus archivos directamente a la interfaz de Hugging Face.
-4. **Para sincronización automática:** Ve a **"Settings"** -> **"Repository Settings"** y busca la opción para conectar tu repo de GitHub.
+## Paso 3: Cargar el código (2 Opciones)
+
+Hugging Face ha actualizado su interfaz. Elige la que te parezca más fácil:
+
+### Opción A: "Espejo" (Mirroring) - Sincroniza desde GitHub automáticamente
+1. En tu Space, ve a la pestaña **Settings**.
+2. Busca la sección **"Repository mirroring"**.
+3. En **"Git repository URL"**, pega el enlace de tu repo (ej: `https://github.com/tu-usuario/tu-repo.git`).
+4. Haz clic en el botón de guardar. Esto hará que cada vez que subas algo a GitHub, Hugging Face lo detecte y actualice el sitio.
+
+### Opción B: Empujar directamente (Git Push) - La más fiable
+Si no quieres configurar espejos, puedes subirlo desde tu terminal de esta manera:
+1. En tu terminal (dentro de la carpeta del proyecto), busca el enlace de clonación de tu Space (está en la página principal del Space, botón "Clone").
+2. Agrega Hugging Face como un nuevo "destino" remoto:
+   ```bash
+   git remote add hf https://huggingface.co/spaces/TU_USUARIO/TU_SPACE_NAME
+   ```
+3. Sube el código:
+   ```bash
+   git push hf main --force
+   ```
+   *(Te pedirá tu usuario de Hugging Face y tu Token de acceso como contraseña).*
+
+---
+
+## Paso 4: ¿Dónde ver el progreso?
+Ve a la pestaña **"App"** o **"Logs"** de tu Space. Verás cómo Hugging Face lee el `Dockerfile`, instala las librerías y levanta el sistema. ¡Una vez termine aparecerá el botón "View App"!
 
 ## Paso 4: Variables de Entorno (Opcional pero Recomendado)
 Si quieres persistencia permanente de datos (PostgreSQL):
