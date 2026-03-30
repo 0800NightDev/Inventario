@@ -77,9 +77,14 @@ def migrate():
                 from sqlalchemy import create_engine, text
                 pg_engine = create_engine(supabase_url)
                 with pg_engine.connect() as con:
-                    con.execute(text("SELECT setval('user_id_seq', (SELECT max(id) FROM \"user\"));"))
-                    con.execute(text("SELECT setval('inventory_id_seq', (SELECT max(id) FROM inventory));"))
-                    con.execute(text("SELECT setval('transaction_id_seq', (SELECT max(id) FROM \"transaction\"));"))
+                    # En SQLAlchemy, por defecto los nombres de tabla son minúsculas
+                    # a menos que se especifique __tablename__. Usa nombres sin comillas
+                    # si psycopg2/Postgres los encuentra como 'user' literal.
+                    # 'user' es palabra reservada en Postgres, pero SQLAlchemy la crea como "user"
+                    # Si falla, intentamos usar pg_get_serial_sequence para mayor seguridad
+                    con.execute(text("SELECT setval(pg_get_serial_sequence('\"user\"', 'id'), (SELECT max(id) FROM \"user\"));"))
+                    con.execute(text("SELECT setval(pg_get_serial_sequence('inventory', 'id'), (SELECT max(id) FROM inventory));"))
+                    con.execute(text("SELECT setval(pg_get_serial_sequence('transaction', 'id'), (SELECT max(id) FROM transaction));"))
                     con.commit()
                 print("Secuencias actualizadas correctamente.")
             
