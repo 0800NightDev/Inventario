@@ -73,18 +73,22 @@ def migrate():
             # Ajustar secuencias de IDs para Postgres (SOLO en Postgres)
             if "postgresql" in supabase_url:
                 print("Ajustando secuencias de IDs en PostgreSQL...")
-                # Usamos una nueva conexión para asegurar que no hay confusión de motor
                 from sqlalchemy import create_engine, text
                 pg_engine = create_engine(supabase_url)
+                
+                # Para evitar problemas de comillas con palabras reservadas como "user",
+                # usamos SQLAlchemy para obtener los nombres reales de las tablas.
                 with pg_engine.connect() as con:
-                    # En SQLAlchemy, por defecto los nombres de tabla son minúsculas
-                    # a menos que se especifique __tablename__. Usa nombres sin comillas
-                    # si psycopg2/Postgres los encuentra como 'user' literal.
-                    # 'user' es palabra reservada en Postgres, pero SQLAlchemy la crea como "user"
-                    # Si falla, intentamos usar pg_get_serial_sequence para mayor seguridad
-                    con.execute(text("SELECT setval(pg_get_serial_sequence('\"user\"', 'id'), (SELECT max(id) FROM \"user\"));"))
-                    con.execute(text("SELECT setval(pg_get_serial_sequence('inventory', 'id'), (SELECT max(id) FROM inventory));"))
-                    con.execute(text("SELECT setval(pg_get_serial_sequence('transaction', 'id'), (SELECT max(id) FROM transaction));"))
+                    for table in reversed(db.metadata.sorted_tables):
+                        # Solo actualizar si la tabla tiene una columna 'id'
+                        if 'id' in table.columns:
+                            table_name = table.name
+                            # Crear el SQL dinámicamente citando el nombre de la tabla de forma segura
+                            sql = f"SELECT setval(pg_get_serial_sequence('\"{table_name}\"', 'id'), coalesce(max(id), 1), max(id) IS NOT null) FROM \"{table_name}\";"
+                            try:
+                                con.execute(text(sql))
+                            except Exception as seq_e:
+                                print(f"  Advertencia ajustando secuencia para {table_name}: {seq_e}")
                     con.commit()
                 print("Secuencias actualizadas correctamente.")
             
