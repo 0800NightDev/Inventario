@@ -432,12 +432,12 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: all 0.3s ease;
-  animation: slideUp 0.5s ease-out both;
   margin-bottom: 2rem;
 }
 
 .card:hover {
   box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
 }
 
 .card-title {
@@ -651,8 +651,8 @@ body {
 }
 
 .btn-warning:hover:not(:disabled) {
-  filter: brightness(1.1);
   transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
 }
 
 .btn-outline {
@@ -665,6 +665,7 @@ body {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-light);
+  transform: translateY(-1px);
 }
 
 .btn-outline-danger {
@@ -788,6 +789,7 @@ textarea.form-control {
 
 .cb-label-styled:hover {
   border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .cb-label-styled input[type="checkbox"] {
@@ -1379,6 +1381,11 @@ textarea.form-control {
   padding: 18px;
   margin-bottom: 14px;
   animation: slideDownFade 0.3s ease-out;
+}
+
+.personal-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
 }
 
 .pedido-card-header {
