@@ -1,11 +1,8 @@
-venv/
-__pycache__/
-*.pyc
+node_modules/
 .env
-instance/
-build/
+.netlify/
 dist/
-*.spec
-tunnel.log
-cloudflared-linux-amd64
-android_export/
+*.log
+.DS_Store
+static/uploads/*
+!static/uploads/.gitkeep

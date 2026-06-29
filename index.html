@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Radiografía</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar"></nav>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="container" id="app"></div>
+
+    <button class="theme-toggle liquidGL" id="theme-toggle" title="Cambiar Modo Oscuro/Claro">
+        <svg id="theme-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
+
+    <!-- Dependencies -->
+    <script src="/js/html2canvas.min.js" defer></script>
+    <script src="/js/chart.umd.min.js" defer></script>
+    
+    <!-- SPA Files -->
+    <script src="/js/liquidGL.js" defer></script>
+    <script src="/js/supabase.js" defer></script>
+    <script src="/js/app.js" defer></script>
+    
+    <!-- Views -->
+    <script src="/js/views/login.js" defer></script>
+    <script src="/js/views/registro.js" defer></script>
+    <script src="/js/views/dashboard_admin.js" defer></script>
+    <script src="/js/views/dashboard_trabajador.js" defer></script>
+    <script src="/js/views/gestion_personal.js" defer></script>
+</body>
+</html>
