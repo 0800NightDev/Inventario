@@ -78,11 +78,11 @@ window.renderGestionPersonal = async function(container) {
             <hr style="margin: 1.5rem 0 1rem 0; border: none; border-top: 1px solid var(--border-color);">
             <form class="form-reset" style="display: flex; gap: 0.5rem; align-items: stretch; max-width: 400px; margin-bottom: 0.8rem;">
                 <input type="password" class="form-control input-pass" style="margin-bottom: 0;" placeholder="Ingresar nueva contraseña..." required>
-                <button type="submit" class="btn" style="background-color: var(--primary); color: var(--bg-gradient-1); white-space: nowrap;">Resetear Clave</button>
+                <button type="submit" class="btn" style="background-color: var(--primary); color: #ffffff; white-space: nowrap;">Resetear Clave</button>
             </form>
             <form class="form-whatsapp" style="display: flex; gap: 0.5rem; align-items: stretch; max-width: 400px;">
                 <input type="tel" class="form-control input-wa" style="margin-bottom: 0;" placeholder="Editar WhatsApp..." value="${user.whatsapp_number || ''}" required>
-                <button type="submit" class="btn" style="background-color: var(--success); color: var(--bg-gradient-1); white-space: nowrap;">Fijar Contacto</button>
+                <button type="submit" class="btn" style="background-color: var(--success); color: #ffffff; white-space: nowrap;">Fijar Contacto</button>
             </form>
             ` : ''}
         </div>

@@ -16,7 +16,7 @@ window.renderLogin = function(container) {
 
             <div style="text-align: center; margin-top: 1.5rem; font-size: 0.95rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
                 <p style="color: #64748b; margin-bottom: 0.5rem;">¿Nuevo en la plataforma?</p>
-                <a href="#registro" class="btn" style="background-color: var(--primary); color: var(--bg-gradient-1); text-decoration: none; display: inline-block; padding: 0.5rem 1rem; width: 100%; box-sizing: border-box;">Solicitar Acceso como Trabajador</a>
+                <a href="#registro" class="btn" style="background-color: var(--primary); color: #ffffff; text-decoration: none; display: inline-block; padding: 0.5rem 1rem; width: 100%; box-sizing: border-box;">Solicitar Acceso como Trabajador</a>
                 
                 <p style="margin-top: 1.5rem; color: #64748b; font-size: 0.85rem;">¿Olvidaste tu contraseña o usuario?<br> <strong style="color: var(--error);">Solicita un Reset de Clave al Administrador</strong> para recuperarlo de inmediato mediante su panel personal.</p>
             </div>

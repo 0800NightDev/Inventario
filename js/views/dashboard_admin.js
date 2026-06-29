@@ -128,7 +128,7 @@ window.renderDashboardAdmin = async function(container) {
                 `).join('')}
             </div>
 
-            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; margin-top: 1rem; font-weight: 800; background-color: var(--primary);">Delegar Tarea de Extracción</button>
+            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; margin-top: 1rem; font-weight: 800; background-color: var(--primary); color: #ffffff;">Asignar Entrega</button>
         </form>
     </div>
 
@@ -617,7 +617,7 @@ window.renderDashboardAdmin = async function(container) {
       window.showToast(err.message, 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Delegar Tarea de Extracción';
+      submitBtn.textContent = 'Asignar Entrega';
     }
   });
 

@@ -381,7 +381,7 @@ async function loadPendingOrders(userId) {
                 <label style="font-weight: 600; color: var(--primary); font-size: 0.95rem;">Foto Comprobante de Entrega Físico <span style="color: var(--error);">*</span></label>
                 <input type="file" class="form-control foto-input" accept="image/*" required style="margin-bottom: 0; cursor: pointer;">
             </div>
-            <button type="submit" class="btn" style="background-color: var(--secondary); color: var(--bg-gradient-1);">Confirmar Despacho</button>
+            <button type="submit" class="btn" style="background-color: var(--secondary); color: #ffffff;">Confirmar Despacho</button>
         </form>
       `;
 
