@@ -450,6 +450,14 @@
           this.canvas.style.visibility = "hidden";
           undos.push(() => (this.canvas.style.visibility = "visible"));
 
+          if (document.body) {
+            const origBGAttachment = document.body.style.backgroundAttachment;
+            document.body.style.backgroundAttachment = "scroll";
+            undos.push(() => {
+              document.body.style.backgroundAttachment = origBGAttachment;
+            });
+          }
+
           const lensElements = this.lenses
             .flatMap((lens) => [lens.el, lens._shadowEl])
             .filter(Boolean);

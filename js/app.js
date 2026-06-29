@@ -152,11 +152,19 @@ function renderNavbar() {
     </div>
     <div class="nav-bubble links-bubble liquidGL">
       ${isAdmin ? `
-        <a href="#admin" class="${currentHash === '#admin' ? 'active' : ''}">Panel Admin</a>
-        <a href="#personal" class="${currentHash === '#personal' ? 'active' : ''}">Personal</a>
-        <a href="#trabajador" class="${currentHash === '#trabajador' ? 'active' : ''}">Actualización de Inventario</a>
+        <a href="#admin" class="${currentHash === '#admin' ? 'active' : ''}">
+          <span class="desktop-text">Panel Admin</span><span class="mobile-text">Panel</span>
+        </a>
+        <a href="#personal" class="${currentHash === '#personal' ? 'active' : ''}">
+          <span class="desktop-text">Personal</span><span class="mobile-text">Personal</span>
+        </a>
+        <a href="#trabajador" class="${currentHash === '#trabajador' ? 'active' : ''}">
+          <span class="desktop-text">Actualización de Inventario</span><span class="mobile-text">Stock</span>
+        </a>
       ` : `
-        <a href="#trabajador" class="${currentHash === '#trabajador' ? 'active' : ''}">Comprobantes</a>
+        <a href="#trabajador" class="${currentHash === '#trabajador' ? 'active' : ''}">
+          <span class="desktop-text">Comprobantes</span><span class="mobile-text">Comprobantes</span>
+        </a>
       `}
     </div>
     <div class="nav-bubble user-bubble liquidGL">

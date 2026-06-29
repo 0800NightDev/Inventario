@@ -1544,8 +1544,19 @@ textarea.form-control {
   text-decoration: underline;
 }
 
+.mobile-text {
+  display: none;
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .desktop-text {
+    display: none;
+  }
+  .mobile-text {
+    display: inline;
+  }
+
   .container {
     padding: 80px 14px 30px;
   }
@@ -1651,5 +1662,13 @@ textarea.form-control {
 
   .btn-group .btn {
     flex: 1;
+  }
+
+  .links-bubble a {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+  }
+  .nav-bubble {
+    padding: 4px 10px;
   }
 }
