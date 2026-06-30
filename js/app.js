@@ -88,8 +88,8 @@ function handleRoute() {
   
   if (!container) return;
 
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const token = sessionStorage.getItem('token');
+  const user = JSON.parse(sessionStorage.getItem('user') || 'null');
 
   // Redirección si está autenticado pero intenta ir a login/registro
   if (token && user && (hash === '#login' || hash === '#registro')) {
@@ -130,8 +130,8 @@ function renderNavbar() {
   const nav = document.getElementById('navbar');
   if (!nav) return;
 
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const token = sessionStorage.getItem('token');
+  const user = JSON.parse(sessionStorage.getItem('user') || 'null');
 
   if (!token || !user) {
     nav.innerHTML = `
@@ -204,8 +204,8 @@ function initNavbarLiquidGL() {
 }
 
 function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('user');
   window.location.hash = '#login';
   showToast('Sesión cerrada correctamente.', 'success');
 }

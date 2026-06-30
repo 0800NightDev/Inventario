@@ -1,6 +1,6 @@
 // Vista Dashboard Administrador
 window.renderDashboardAdmin = async function(container) {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = JSON.parse(sessionStorage.getItem('user') || '{}');
   const isSuper = user.role === 'superusuario';
   let chartInstance = null;
 
@@ -652,7 +652,7 @@ window.renderDashboardAdmin = async function(container) {
     btn.disabled = true;
     btn.textContent = 'Exportando...';
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await fetch('/api/export-excel', {
         headers: { 'Authorization': `Bearer ${token}` }
       });

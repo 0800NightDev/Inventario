@@ -1,6 +1,6 @@
 // Vista Dashboard Trabajador (Comprobantes)
 window.renderDashboardTrabajador = function(container) {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = JSON.parse(sessionStorage.getItem('user') || '{}');
   const isAdmin = ['administrador', 'superusuario'].includes(user.role);
 
   container.innerHTML = `

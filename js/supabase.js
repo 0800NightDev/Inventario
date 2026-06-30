@@ -35,7 +35,7 @@ const api = {
     if (!isMultipart) {
       headers['Content-Type'] = 'application/json';
     }
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -51,8 +51,8 @@ const api = {
       }
       
       // Token expirado o inválido, redirigir al login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
       window.location.hash = '#login';
       throw new Error('Sesión expirada. Por favor inicie sesión nuevamente.');
     }

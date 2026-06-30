@@ -41,8 +41,8 @@ window.renderLogin = function(container) {
       const response = await window.api.post('/auth-login', { username, password });
       
       // Guardar sesión
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      sessionStorage.setItem('token', response.token);
+      sessionStorage.setItem('user', JSON.stringify(response.user));
 
       window.showToast('Sesión iniciada exitosamente.', 'success');
 
