@@ -365,12 +365,19 @@ async function handleValidateBatch(event) {
   const erroresStock = [];
 
   for (const tx of egresos) {
-    const { data: inv } = await supabase
+    let invQuery = supabase
       .from('inventory')
       .select('cantidad_cajas')
       .eq('tamano_placa', tx.tamano_placa)
-      .eq('formato', tx.formato)
-      .maybeSingle();
+      .eq('formato', tx.formato);
+
+    if (tx.fecha_vencimiento) {
+      invQuery = invQuery.eq('fecha_vencimiento', tx.fecha_vencimiento);
+    } else {
+      invQuery = invQuery.is('fecha_vencimiento', null);
+    }
+
+    const { data: inv } = await invQuery.maybeSingle();
 
     const stockActual = inv ? inv.cantidad_cajas : 0;
     if (stockActual < tx.cantidad_cajas) {
@@ -454,12 +461,19 @@ async function handleConfirmOrder(event) {
   }
 
   // Verificar stock suficiente
-  const { data: inv } = await supabase
+  let invQuery = supabase
     .from('inventory')
     .select('cantidad_cajas')
     .eq('tamano_placa', tx.tamano_placa)
-    .eq('formato', tx.formato)
-    .maybeSingle();
+    .eq('formato', tx.formato);
+
+  if (tx.fecha_vencimiento) {
+    invQuery = invQuery.eq('fecha_vencimiento', tx.fecha_vencimiento);
+  } else {
+    invQuery = invQuery.is('fecha_vencimiento', null);
+  }
+
+  const { data: inv } = await invQuery.maybeSingle();
 
   const stockActual = inv ? inv.cantidad_cajas : 0;
   if (stockActual < tx.cantidad_cajas) {
