@@ -280,6 +280,7 @@ window.renderDashboardAdmin = async function(container) {
   function renderInventory() {
     const dihlGrid = document.getElementById('dihl-grid');
     const hruGrid = document.getElementById('hru-grid');
+    if (!dihlGrid || !hruGrid) return;
 
     const mappedSizes = ['14x14', '14x17', '10x14 (26x36)', '10x12'];
     
@@ -343,6 +344,8 @@ window.renderDashboardAdmin = async function(container) {
   // --- RENDERIZADO TRANSACCIONES PENDIENTES ---
   function renderPending(pendingTxs) {
     const list = document.getElementById('pending-list');
+    if (!list) return;
+
     if (!pendingTxs || pendingTxs.length === 0) {
       list.innerHTML = `
         <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); padding: 1rem; border-radius: 6px; color: var(--success); margin-top: 1rem; font-weight: 500;">
@@ -451,6 +454,8 @@ window.renderDashboardAdmin = async function(container) {
   // --- RENDERIZADO HISTORIAL ---
   function renderHistory(txs) {
     const tbody = document.getElementById('historial-tbody');
+    if (!tbody) return;
+
     if (!txs || txs.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="padding: 1rem; text-align: center; color: var(--text-muted);">No hay movimientos registrados.</td></tr>`;
       return;
@@ -511,6 +516,8 @@ window.renderDashboardAdmin = async function(container) {
   // --- TRABAJADORES SELECT ---
   function populateWorkers(usersList) {
     const select = document.getElementById('select-trabajador');
+    if (!select) return;
+
     const filtrados = usersList.filter(u => u.role === 'trabajador' && u.status === 'activo');
     
     if (filtrados.length === 0) {
@@ -678,7 +685,9 @@ window.renderDashboardAdmin = async function(container) {
   // --- GRÁFICOS (Chart.js) ---
 
   function renderChart(txsList) {
-    const chartCtx = document.getElementById('inventoryChart').getContext('2d');
+    const chartEl = document.getElementById('inventoryChart');
+    if (!chartEl) return;
+    const chartCtx = chartEl.getContext('2d');
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const textColor = isDark ? '#f8fafc' : '#1e293b';
     const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
