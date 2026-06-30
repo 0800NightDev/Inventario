@@ -197,8 +197,8 @@ async function handlePost(event) {
     const tamano = mapTamano(item.tamano_placa);
     const formato = item.formato;
 
-    if (tipo === 'ingreso' && isAdmin) {
-      // Ingresos de admin van directo a aprobada + actualizar inventario
+    if (isAdmin) {
+      // Ingresos y egresos de admin van directo a aprobada + actualizar inventario
       const { data: tx, error: txError } = await supabase
         .from('transactions')
         .insert({
@@ -218,8 +218,9 @@ async function handlePost(event) {
 
       if (txError) throw txError;
 
-      // Actualizar inventario: buscar o crear registro
-      await upsertInventory(supabase, tamano, formato, fecha_vencimiento, totalCajas);
+      // Actualizar inventario: sumar si es ingreso, restar si es egreso
+      const delta = tipo === 'ingreso' ? totalCajas : -totalCajas;
+      await upsertInventory(supabase, tamano, formato, fecha_vencimiento, delta);
 
       createdTransactions.push(tx);
     } else {
