@@ -365,27 +365,14 @@ async function handleValidateBatch(event) {
   const erroresStock = [];
 
   for (const tx of egresos) {
-    let stockActual = 0;
+    const { data: invList } = await supabase
+      .from('inventory')
+      .select('cantidad_cajas')
+      .eq('tamano_placa', tx.tamano_placa)
+      .eq('formato', tx.formato)
+      .gt('cantidad_cajas', 0);
     
-    if (tx.fecha_vencimiento) {
-      const { data: inv } = await supabase
-        .from('inventory')
-        .select('cantidad_cajas')
-        .eq('tamano_placa', tx.tamano_placa)
-        .eq('formato', tx.formato)
-        .eq('fecha_vencimiento', tx.fecha_vencimiento)
-        .maybeSingle();
-      stockActual = inv ? inv.cantidad_cajas : 0;
-    } else {
-      const { data: invList } = await supabase
-        .from('inventory')
-        .select('cantidad_cajas')
-        .eq('tamano_placa', tx.tamano_placa)
-        .eq('formato', tx.formato)
-        .gt('cantidad_cajas', 0);
-      
-      stockActual = invList ? invList.reduce((sum, item) => sum + item.cantidad_cajas, 0) : 0;
-    }
+    const stockActual = invList ? invList.reduce((sum, item) => sum + item.cantidad_cajas, 0) : 0;
 
     if (stockActual < tx.cantidad_cajas) {
       erroresStock.push(
@@ -467,26 +454,15 @@ async function handleConfirmOrder(event) {
     };
   }
 
-  // Verificar stock suficiente
-  let stockActual = 0;
-  if (tx.fecha_vencimiento) {
-    const { data: inv } = await supabase
-      .from('inventory')
-      .select('cantidad_cajas')
-      .eq('tamano_placa', tx.tamano_placa)
-      .eq('formato', tx.formato)
-      .eq('fecha_vencimiento', tx.fecha_vencimiento)
-      .maybeSingle();
-    stockActual = inv ? inv.cantidad_cajas : 0;
-  } else {
-    const { data: invList } = await supabase
-      .from('inventory')
-      .select('cantidad_cajas')
-      .eq('tamano_placa', tx.tamano_placa)
-      .eq('formato', tx.formato)
-      .gt('cantidad_cajas', 0);
-    stockActual = invList ? invList.reduce((sum, item) => sum + item.cantidad_cajas, 0) : 0;
-  }
+  // Verificar stock suficiente global
+  const { data: invList } = await supabase
+    .from('inventory')
+    .select('cantidad_cajas')
+    .eq('tamano_placa', tx.tamano_placa)
+    .eq('formato', tx.formato)
+    .gt('cantidad_cajas', 0);
+    
+  const stockActual = invList ? invList.reduce((sum, item) => sum + item.cantidad_cajas, 0) : 0;
 
   if (stockActual < tx.cantidad_cajas) {
     return {
@@ -617,8 +593,8 @@ async function handleDelete(event) {
 // Helper — buscar o crear registro de inventario y actualizar
 // ══════════════════════════════════════════════════════════════
 async function upsertInventory(supabase, tamano_placa, formato, fecha_vencimiento, cantidadDelta) {
-  // Manejar Egreso FIFO si fecha_vencimiento es nula
-  if (cantidadDelta < 0 && !fecha_vencimiento) {
+  // Manejar Egreso FIFO siempre (ignora la fecha de vencimiento solicitada)
+  if (cantidadDelta < 0) {
     let restante = Math.abs(cantidadDelta);
     
     const { data: batches } = await supabase
